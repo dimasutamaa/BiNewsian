@@ -4,6 +4,16 @@
     --secondary-color: #764ba2;
 }
 
+.btn-purple {
+    background: var(--primary-color);
+    color: white;
+}
+
+.btn-purple:hover {
+    background: #5a6edb;
+    color: white;
+}
+
 main {
     position: relative;
 }
