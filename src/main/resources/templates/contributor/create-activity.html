@@ -130,26 +130,36 @@
             const activityEditorContent = activityEditor.root.innerHTML;
 
             function setInvalid(id, message) {
-                $("#" + id).addClass("is-invalid");
-                $("#" + id + "Error").text(message);
+                $(`#${id}`).addClass("is-invalid");
+                $(`#${id}Error`).text(message);
             }
 
             function clearInvalid(id) {
-                $("#" + id).removeClass("is-invalid");
-                $("#" + id + "Error").text("");
+                $(`#${id}`).removeClass("is-invalid");
+                $(`#${id}Error`).text("");
             }
 
             function setInvalidGroup(ids, errorId, message) {
-                ids.forEach(id => $("#" + id).addClass("is-invalid"));
-                $("#" + errorId).text(message).addClass("d-block");
+                ids.forEach((id) => $(`#${id}`).addClass("is-invalid"));
+                $(`#${errorId}`).text(message).addClass("d-block");
             }
 
             function clearInvalidGroup(ids, errorId) {
-                ids.forEach(id => $("#" + id).removeClass("is-invalid"));
-                $("#" + errorId).text("").removeClass("d-block");
+                ids.forEach((id) => $(`#${id}`).removeClass("is-invalid"));
+                $(`#${errorId}`).text("").removeClass("d-block");
             }
 
-            $("input, select, #activity-editor").on("input change", function () {
+            function setInvalidEditor(message) {
+                $("#activity-editor").addClass("is-invalid form-control").css("border", "1px solid #dc3545");
+                $("#activityEditorError").text(message).addClass("d-block");
+            }
+
+            function clearInvalidEditor() {
+                $("#activity-editor").removeClass("is-invalid form-control").css("border", "");
+                $("#activityEditorError").text("").removeClass("d-block");
+            }
+
+            $("input, select").on("input change", function () {
                 clearInvalid(this.id);
             });
 
@@ -168,6 +178,12 @@
 
                 if (start && end && start < end) {
                     clearInvalidGroup(["timeStart", "timeEnd"], "timeError");
+                }
+            });
+
+            activityEditor.on('text-change', function() {
+                if (activityEditor.getText().trim().length > 0) {
+                    clearInvalidEditor();
                 }
             });
 
@@ -246,7 +262,7 @@
                 }
 
                 if (activityEditor.getText().trim().length === 0) {
-                    setInvalid("#activity-editor", "Activity details cannot be empty.");
+                    setInvalidEditor("Activity details cannot be empty");
                     isValid = false;
                 }
 
@@ -287,6 +303,12 @@
                 })
             })
         </script>
+        <style>
+            #activity-editor.is-invalid .ql-toolbar,
+            #activity-editor.is-invalid .ql-editor {
+                border-color: #dc3545 !important;
+            }
+        </style>
     </th:block>
 </body>
 </html>
