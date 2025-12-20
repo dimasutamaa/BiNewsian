@@ -1,5 +1,6 @@
 package com.binewsian.repository;
 
+import com.binewsian.enums.Role;
 import com.binewsian.model.User;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
@@ -15,4 +16,6 @@ public interface UserRepository extends JpaRepository<User, Long> {
     boolean existsByUsername(String username);
 
     boolean existsByEmail(String email);
+
+    int countByRole(Role role);
 }

@@ -31,10 +31,10 @@
         <!-- Stat Cards -->
         <div class="container mb-4">
             <div class="row g-3">
-                <div th:replace="fragments/stat-card :: statCard('bi-newspaper', 'Total News', 24, 'icon-news')"></div>
-                <div th:replace="fragments/stat-card :: statCard('bi-activity', 'Total Activity', 12, 'icon-activity')"></div>
-                <div th:replace="fragments/stat-card :: statCard('bi-tags', 'Total Category', 15, 'icon-published')"></div>
-                <div th:replace="fragments/stat-card :: statCard('bi-file-earmark', 'Total Contributor', 6, 'icon-draft')"></div>
+                <div th:replace="fragments/stat-card :: statCard('bi-newspaper', 'Total News', ${summary.totalNews}, 'icon-news')"></div>
+                <div th:replace="fragments/stat-card :: statCard('bi-activity', 'Total Activity', ${summary.totalActivity}, 'icon-activity')"></div>
+                <div th:replace="fragments/stat-card :: statCard('bi-tags', 'Total Category', ${summary.totalCategory}, 'icon-published')"></div>
+                <div th:replace="fragments/stat-card :: statCard('bi-file-earmark', 'Total Contributor', ${summary.totalContributor}, 'icon-draft')"></div>
             </div>
         </div>
 

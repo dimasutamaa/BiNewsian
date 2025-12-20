@@ -5,6 +5,7 @@ import com.binewsian.enums.Role;
 import com.binewsian.model.Category;
 import com.binewsian.model.User;
 import com.binewsian.service.CategoryService;
+import com.binewsian.service.HomeService;
 import jakarta.servlet.http.HttpSession;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -20,6 +21,7 @@ import java.util.List;
 public class HomeController {
 
     private final CategoryService categoryService;
+    private final HomeService homeService;
 
     @GetMapping("/")
     public String home() {
@@ -57,6 +59,7 @@ public class HomeController {
         User user = (User) session.getAttribute("user");
         Page<Category> categoryPage = categoryService.findPaginated(0, size);
 
+        model.addAttribute("summary", homeService.getAdminSummary());
         model.addAttribute("user", user);
         model.addAttribute("categories", categoryPage.getContent());
         model.addAttribute("currentPage", page);
