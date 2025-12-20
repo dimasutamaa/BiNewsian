@@ -1,5 +1,6 @@
 package com.binewsian.service.impl;
 
+import com.binewsian.constant.AppConstant;
 import com.binewsian.dto.CreateNewsRequest;
 import com.binewsian.enums.NewsStatus;
 import com.binewsian.exception.BiNewsianException;
@@ -9,6 +10,10 @@ import com.binewsian.service.NewsService;
 import com.binewsian.service.StorageService;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -51,6 +56,18 @@ public class NewsServiceImpl implements NewsService {
         news.setPublishedAt(isDraft ? null : LocalDateTime.now());
 
         newsRepository.save(news);
+    }
+
+    @Override
+    public void delete(Long id) throws BiNewsianException {
+        News news = newsRepository.findById(id).orElseThrow(() -> new BiNewsianException(AppConstant.NEWS_NOT_FOUND));
+        newsRepository.delete(news);
+    }
+
+    @Override
+    public Page<News> findPaginated(int page, int size) {
+        Pageable pageable = PageRequest.of(page, size, Sort.by("createdAt").descending());
+        return newsRepository.findByStatus(NewsStatus.PUBLISHED, pageable);
     }
 
     private void validate(CreateNewsRequest r) throws BiNewsianException {

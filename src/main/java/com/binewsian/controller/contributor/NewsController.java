@@ -16,7 +16,7 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
-@Controller
+@Controller("contributorNewsController")
 @RequestMapping("/contributor")
 @RequireRole(Role.CONTRIBUTOR)
 @RequiredArgsConstructor

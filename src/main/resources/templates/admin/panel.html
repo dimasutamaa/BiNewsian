@@ -72,73 +72,84 @@
                     <div class="tab-content">
                         <!-- Manage News -->
                         <div class="tab-pane fade" id="panel-news" role="tabpanel" aria-labelledby="tab-news">
+                            <!-- Search -->
                             <div class="search-wrap mb-3 d-flex align-items-center gap-2">
                                 <i class="bi bi-search text-muted"></i>
-                                <input type="text" class="form-control" placeholder="Search News" aria-label="Search News">
+                                <input id="searchNews" type="text" class="form-control" placeholder="Search News">
                             </div>
-                            <div class="news-item">
-                                <div class="d-flex align-items-start">
-                                    <div class="thumb me-3"></div>
-                                    <div class="flex-grow-1">
-                                        <div class="d-flex align-items-start justify-content-between">
-                                            <h6 class="news-title mb-1">Binus University Ranked 1st in Indonesia’s Best Campus 2025</h6>
-                                            <div class="d-flex align-items-center gap-2">
-                                                <span class="status-pill status-published">Published</span>
-                                                <div class="dropdown">
-                                                    <button class="btn btn-link p-1 ellipsis-btn" type="button" data-bs-toggle="dropdown" aria-expanded="false">
-                                                        <i class="bi bi-three-dots-vertical"></i>
-                                                    </button>
-                                                    <ul class="dropdown-menu dropdown-menu-end">
-                                                        <li>
-                                                            <button class="dropdown-item" type="button" id="action-edit">
-                                                                <i class="bi bi-pencil me-2"></i> Edit
-                                                            </button>
-                                                        </li>
-                                                        <li>
-                                                            <button class="dropdown-item text-danger" type="button" id="action-delete" data-item-id="123">
-                                                                <i class="bi bi-trash me-2"></i> Delete
-                                                            </button>
-                                                        </li>
-                                                    </ul>
+
+                            <!-- News List -->
+                            <div id="newsList" th:if="${!#lists.isEmpty(news)}">
+                                <div class="news-item" th:each="news : ${news}" th:attr="data-name=${news.title}">
+                                    <div class="d-flex align-items-start">
+                                        <div class="thumb me-3"></div>
+
+                                        <div class="flex-grow-1">
+                                            <div class="d-flex align-items-start justify-content-between">
+                                                <h6 class="news-title mb-1" th:text="${news.title}"></h6>
+
+                                                <div class="d-flex align-items-center gap-2">
+                                                    <span class="status-pill status-published" th:text="${news.status.getDisplayName()}">-</span>
+
+                                                    <div class="dropdown">
+                                                        <button class="btn btn-link p-1 ellipsis-btn" type="button" data-bs-toggle="dropdown">
+                                                            <i class="bi bi-three-dots-vertical"></i>
+                                                        </button>
+
+                                                        <ul class="dropdown-menu dropdown-menu-end">
+                                                            <li>
+                                                                <button class="dropdown-item text-danger action-delete" th:data-id="${news.id}" th:data-type="news">
+                                                                    <i class="bi bi-trash me-2"></i> Delete
+                                                                </button>
+                                                            </li>
+                                                        </ul>
+                                                    </div>
                                                 </div>
                                             </div>
-                                        </div>
 
-                                        <div class="d-flex flex-wrap gap-2 mb-1">
-                                            <span class="badge badge-soft">
-                                                <i class="bi bi-tag"></i> Achievement
-                                            </span>
-                                            <span class="badge badge-soft">
-                                                <i class="bi bi-tag"></i> Academic
-                                            </span>
-                                            <span class="text-muted small">•<span style="margin-left: 6.5px;">2 days ago</span></span>
+                                            <div class="d-flex flex-wrap gap-2 mb-1">
+                                                <span class="badge badge-soft">
+                                                    <i class="bi bi-tag"></i>
+                                                    <!-- Category Nanti Bisa Enhancement Langsung Ambil Dari Table Category -->
+                                                    <span th:text="${news.category}">-</span>
+                                                </span>
+                                                <span class="text-muted small">
+                                                    • <span th:text="${#temporals.format(news.createdAt, 'dd MMMM yyyy')}">-</span>
+                                                </span>
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
                             </div>
 
-                            <div class="d-flex align-items-center justify-content-between flex-wrap gap-2">
-                                <p class="footer-note mb-0">Showing 3 of 24 results</p>
-                                <div>
-                                    <nav aria-label="Page navigation example">
-                                        <ul class="pagination mb-0">
-                                            <li class="page-item">
-                                                <a class="page-link" href="#" aria-label="Previous">
-                                                    <span aria-hidden="true">&laquo;</span>
-                                                </a>
-                                            </li>
-                                            <li class="page-item"><a class="page-link" href="#">1</a></li>
-                                            <li class="page-item"><a class="page-link" href="#">2</a></li>
-                                            <li class="page-item"><a class="page-link" href="#">3</a></li>
-                                            <li class="page-item">
-                                                <a class="page-link" href="#" aria-label="Next">
-                                                    <span aria-hidden="true">&raquo;</span>
-                                                </a>
-                                            </li>
-                                        </ul>
-                                    </nav>
-                                </div>
+                            <div th:if="${#lists.isEmpty(news)}" class="text-muted text-center">
+                                No news yet.
                             </div>
+
+                            <div id="noNews" style="display:none;" class="text-muted text-center">
+                                No matching news.
+                            </div>
+
+                            <!-- Pagination -->
+                            <nav th:if="${newsTotalPages > 1}" class="mt-3">
+                                <ul class="pagination justify-content-center">
+                                    <li class="page-item" th:classappend="${newsCurrentPage == 0} ? 'disabled'">
+                                        <a class="page-link" th:href="@{/admin/panel(newsPage=${newsCurrentPage - 1}, tab='news')}">
+                                            &laquo;
+                                        </a>
+                                    </li>
+
+                                    <li class="page-item" th:each="i : ${#numbers.sequence(0, newsTotalPages - 1)}" th:classappend="${i == newsCurrentPage} ? 'active'">
+                                        <a class="page-link" th:text="${i + 1}" th:href="@{/admin/panel(newsPage=${i}, tab='news')}"></a>
+                                    </li>
+
+                                    <li class="page-item" th:classappend="${newsCurrentPage + 1 == newsTotalPages} ? 'disabled'">
+                                        <a class="page-link" th:href="@{/admin/panel(newsPage=${newsCurrentPage + 1}, tab='news')}">
+                                            &raquo;
+                                        </a>
+                                    </li>
+                                </ul>
+                            </nav>
                         </div>
 
                         <!-- Manage Activity  -->
@@ -177,7 +188,7 @@
                                                             </button>
                                                         </li>
                                                         <li>
-                                                            <button class="dropdown-item text-danger action-delete" th:attr="data-id=${category.id}">
+                                                            <button class="dropdown-item text-danger action-delete" th:data-id="${category.id}" th:data-type="category">
                                                                 <i class="bi bi-trash me-2"></i> Delete
                                                             </button>
                                                         </li>
@@ -193,30 +204,6 @@
                                 </div>
                             </div>
 
-                            <!-- Pagination -->
-                            <nav th:if="${totalPages > 1}" class="mt-3">
-                                <ul class="pagination justify-content-center">
-                                    <!-- Previous -->
-                                    <li class="page-item" th:classappend="${currentPage == 0} ? 'disabled'">
-                                        <a class="page-link" th:href="@{/admin/panel(page=${currentPage - 1})}">
-                                            &laquo;
-                                        </a>
-                                    </li>
-
-                                    <!-- Page Numbers -->
-                                    <li class="page-item" th:each="i : ${#numbers.sequence(0, totalPages - 1)}" th:classappend="${i == currentPage} ? 'active'">
-                                        <a class="page-link" th:text="${i + 1}" th:href="@{/admin/panel(page=${i})}"></a>
-                                    </li>
-
-                                    <!-- Next -->
-                                    <li class="page-item" th:classappend="${currentPage + 1 == totalPages} ? 'disabled'">
-                                        <a class="page-link" th:href="@{/admin/panel(page=${currentPage + 1})}">
-                                            &raquo;
-                                        </a>
-                                    </li>
-                                </ul>
-                            </nav>
-
                             <div th:if="${#lists.isEmpty(categories)}" class="text-muted text-center">
                                 No categories yet.
                             </div>
@@ -224,6 +211,27 @@
                             <div id="noCategory" style="display:none;" class="text-muted text-center">
                                 No matching categories.
                             </div>
+
+                            <!-- Pagination -->
+                            <nav th:if="${categoryTotalPages > 1}" class="mt-3">
+                                <ul class="pagination justify-content-center">
+                                    <li class="page-item" th:classappend="${categoryCurrentPage == 0} ? 'disabled'">
+                                        <a class="page-link"th:href="@{/admin/panel(categoryPage=${categoryCurrentPage - 1}, tab='category')}">
+                                            &laquo;
+                                        </a>
+                                    </li>
+
+                                    <li class="page-item" th:each="i : ${#numbers.sequence(0, categoryTotalPages - 1)}" th:classappend="${i == categoryCurrentPage} ? 'active'">
+                                        <a class="page-link" th:text="${i + 1}" th:href="@{/admin/panel(categoryPage=${i}, tab='category')}"></a>
+                                    </li>
+
+                                    <li class="page-item" th:classappend="${categoryCurrentPage + 1 == categoryTotalPages} ? 'disabled'">
+                                        <a class="page-link" th:href="@{/admin/panel(categoryPage=${categoryCurrentPage + 1}, tab='category')}">
+                                            &raquo;
+                                        </a>
+                                    </li>
+                                </ul>
+                            </nav>
                         </div>
 
                         <!-- Manage Contributor  -->
@@ -329,6 +337,21 @@
                 });
             
                 $("#noCategory").toggle(matches === 0 && q.length > 0);
+            })
+
+            $("#searchNews").on("input", function () {
+                const q = $(this).val().toLowerCase();
+                let matches = 0;
+
+                $("#newsList .news-item").each(function () {
+                    const name = $(this).data("name").toLowerCase();
+                    const isMatch = name.includes(q);
+
+                    $(this).toggle(isMatch);
+                    if (isMatch) matches++;
+                });
+
+                $("#noNews").toggle(matches === 0 && q.length > 0);
             })
 
             $("#categoryName").on("input", function () {
@@ -440,7 +463,13 @@
             })
 
             $(document).on("click", ".action-delete", function () {
+                let ajaxUrl = null;
+
                 const id = $(this).data("id");
+                const type = $(this).data("type");
+
+                if (type === "category") ajaxUrl = "/admin/categories/delete";
+                if (type === "news") ajaxUrl = "/admin/news/delete";
 
                 Swal.fire({
                     title: "Delete category?",
@@ -453,7 +482,7 @@
                     if (!result.isConfirmed) return;
 
                     $.ajax({
-                        url: "/admin/categories/delete",
+                        url: ajaxUrl,
                         method: "POST",
                         data: { id: id },
 
@@ -461,7 +490,7 @@
                             Swal.fire({
                                 icon: "success",
                                 title: "Deleted!",
-                                text: "Category has been deleted.",
+                                text: "Item has been deleted.",
                                 timer: 1600,
                                 showConfirmButton: false
                             }).then(() => location.reload());

@@ -3,9 +3,11 @@ package com.binewsian.controller;
 import com.binewsian.annotation.RequireRole;
 import com.binewsian.enums.Role;
 import com.binewsian.model.Category;
+import com.binewsian.model.News;
 import com.binewsian.model.User;
 import com.binewsian.service.CategoryService;
 import com.binewsian.service.HomeService;
+import com.binewsian.service.NewsService;
 import jakarta.servlet.http.HttpSession;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -22,6 +24,7 @@ public class HomeController {
 
     private final CategoryService categoryService;
     private final HomeService homeService;
+    private final NewsService newsService;
 
     @GetMapping("/")
     public String home() {
@@ -54,16 +57,36 @@ public class HomeController {
 
     @GetMapping("/admin/panel")
     @RequireRole(Role.ADMIN)
-    public String adminPanel(@RequestParam(defaultValue = "0") int page, @RequestParam(defaultValue = "5") int size,
-                             HttpSession session, Model model) {
+    public String adminPanel(
+            @RequestParam(defaultValue = "0") int newsPage,
+            @RequestParam(defaultValue = "0") int categoryPage,
+            @RequestParam(defaultValue = "5") int size,
+            @RequestParam(defaultValue = "news") String tab,
+            HttpSession session,
+            Model model
+    ) {
         User user = (User) session.getAttribute("user");
-        Page<Category> categoryPage = categoryService.findPaginated(0, size);
+
+        Page<News> news = newsService.findPaginated(newsPage, size);
+        Page<Category> categories = categoryService.findPaginated(categoryPage, size);
 
         model.addAttribute("summary", homeService.getAdminSummary());
         model.addAttribute("user", user);
-        model.addAttribute("categories", categoryPage.getContent());
-        model.addAttribute("currentPage", page);
-        model.addAttribute("totalPages", categoryPage.getTotalPages());
+
+        // News
+        model.addAttribute("news", news.getContent());
+        model.addAttribute("newsCurrentPage", newsPage);
+        model.addAttribute("newsTotalPages", news.getTotalPages());
+
+        // Category
+        model.addAttribute("categories", categories.getContent());
+        model.addAttribute("categoryCurrentPage", categoryPage);
+        model.addAttribute("categoryTotalPages", categories.getTotalPages());
+
+        // Active tab
+        model.addAttribute("activeTab", tab);
+
         return "admin/panel";
     }
+
 }
