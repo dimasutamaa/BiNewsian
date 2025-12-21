@@ -5,6 +5,7 @@ import com.binewsian.dto.CreateNewsRequest;
 import com.binewsian.enums.NewsStatus;
 import com.binewsian.exception.BiNewsianException;
 import com.binewsian.model.News;
+import com.binewsian.model.User;
 import com.binewsian.repository.NewsRepository;
 import com.binewsian.service.NewsService;
 import com.binewsian.service.StorageService;
@@ -28,7 +29,7 @@ public class NewsServiceImpl implements NewsService {
     private final StorageService storageService;
 
     @Override
-    public void create(CreateNewsRequest request, MultipartFile featuredImage) throws BiNewsianException {
+    public void create(CreateNewsRequest request, MultipartFile featuredImage, User user) throws BiNewsianException {
         boolean isDraft = request.isDraft();
         if (!isDraft) {
             validate(request);
@@ -54,6 +55,7 @@ public class NewsServiceImpl implements NewsService {
         news.setFeaturedImageUrl(publicUrl);
         news.setStatus(isDraft ? NewsStatus.DRAFT : NewsStatus.PUBLISHED);
         news.setPublishedAt(isDraft ? null : LocalDateTime.now());
+        news.setCreatedBy(user);
 
         newsRepository.save(news);
     }

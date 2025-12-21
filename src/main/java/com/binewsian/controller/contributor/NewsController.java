@@ -33,11 +33,13 @@ public class NewsController {
 
     @PostMapping(value = "/news/create", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<?> createNews(
+            HttpSession session,
             @RequestPart("data") CreateNewsRequest request,
             @RequestPart(value = "featuredImage", required = false) MultipartFile featuredImage
     ) {
         try {
-            newsService.create(request, featuredImage);
+            User user = (User) session.getAttribute("user");
+            newsService.create(request, featuredImage, user);
             return ResponseEntity.ok().build();
         } catch (BiNewsianException ex) {
             return ResponseEntity.badRequest().body(ex.getMessage());

@@ -221,9 +221,6 @@
                     const deadline = getDateTime(deadlineRaw);
                     const activityStart = new Date(`${activityDateRaw}T${timeStart}`);
 
-                    console.log("Deadline:", deadline);
-                    console.log("Activity Start:", activityStart);
-
                     if (deadline >= activityStart) {
                         setInvalid("registrationDeadline", "Registration deadline must be before activity start time");
                         isValid = false;

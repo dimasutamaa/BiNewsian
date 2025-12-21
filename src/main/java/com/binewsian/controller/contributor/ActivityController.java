@@ -33,9 +33,13 @@ public class ActivityController {
     }
 
     @PostMapping("/activities/create")
-    public ResponseEntity<?> createActivity(@RequestBody CreateActivityRequest request) {
+    public ResponseEntity<?> createActivity(
+            HttpSession session,
+            @RequestBody CreateActivityRequest request
+    ) {
         try {
-            activityService.create(request);
+            User user = (User) session.getAttribute("user");
+            activityService.create(request, user);
             return ResponseEntity.ok().build();
         } catch (BiNewsianException ex) {
             return ResponseEntity.badRequest().body(ex.getMessage());

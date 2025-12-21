@@ -3,9 +3,9 @@ package com.binewsian.service.impl;
 import com.binewsian.constant.AppConstant;
 import com.binewsian.dto.CreateActivityRequest;
 import com.binewsian.enums.ActivityStatus;
-import com.binewsian.enums.ActivityType;
 import com.binewsian.exception.BiNewsianException;
 import com.binewsian.model.Activity;
+import com.binewsian.model.User;
 import com.binewsian.repository.ActivityRepository;
 import com.binewsian.service.ActivityService;
 import lombok.RequiredArgsConstructor;
@@ -28,7 +28,7 @@ public class ActivityServiceImpl implements ActivityService {
     private final ActivityRepository activityRepository;
 
     @Override
-    public void create(CreateActivityRequest request) throws BiNewsianException {
+    public void create(CreateActivityRequest request, User user) throws BiNewsianException {
         boolean isDraft = request.isDraft();
         if (!isDraft) {
             validate(request);
@@ -48,6 +48,7 @@ public class ActivityServiceImpl implements ActivityService {
         activity.setDetails(request.details());
         activity.setStatus(isDraft ? ActivityStatus.DRAFT : ActivityStatus.PUBLISHED);
         activity.setPublishedAt(isDraft ? null : LocalDateTime.now());
+        activity.setCreatedBy(user);
 
         activityRepository.save(activity);
     }
