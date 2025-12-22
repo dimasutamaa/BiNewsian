@@ -6,8 +6,9 @@ import lombok.Getter;
 @Getter
 @AllArgsConstructor
 public enum NewsStatus {
-    DRAFT("Draft"),
-    PUBLISHED("Published");
+    DRAFT("Draft", "status-draft"),
+    PUBLISHED("Published", "status-published");
 
     private final String displayName;
+    private final String cssClass;
 }

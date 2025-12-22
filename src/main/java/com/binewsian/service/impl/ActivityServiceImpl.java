@@ -68,6 +68,12 @@ public class ActivityServiceImpl implements ActivityService {
         return activityRepository.findByStatus(ActivityStatus.PUBLISHED, pageable);
     }
 
+    @Override
+    public Page<Activity> findPaginatedByUserId(int page, int size, long userId) {
+        Pageable pageable = PageRequest.of(page, size, Sort.by("createdAt").descending());
+        return activityRepository.findByCreatedBy_Id(userId, pageable);
+    }
+
     private String normalizeUrl(String url) {
         if (url == null || url.isBlank()) return url;
 

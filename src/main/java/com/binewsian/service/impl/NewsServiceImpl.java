@@ -82,6 +82,12 @@ public class NewsServiceImpl implements NewsService {
         return newsRepository.findByStatus(NewsStatus.PUBLISHED, pageable);
     }
 
+    @Override
+    public Page<News> findPaginatedByUserId(int page, int size, long userId) {
+        Pageable pageable = PageRequest.of(page, size, Sort.by("createdAt").descending());
+        return newsRepository.findByCreatedBy_Id(userId, pageable);
+    }
+
     private void validate(CreateNewsRequest r) throws BiNewsianException {
         if (r.title() == null || r.title().isBlank())
             throw new BiNewsianException("Title is required");

@@ -204,6 +204,11 @@ body {
     color:#ffffff;
 }
 
+.status-draft {
+    background:#FF0048;
+    color:#ffffff;
+}
+
 .ellipsis-btn{
     color:#6b7280;
 }

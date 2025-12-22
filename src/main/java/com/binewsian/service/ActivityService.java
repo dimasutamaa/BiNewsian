@@ -11,4 +11,5 @@ public interface ActivityService {
     void create(CreateActivityRequest request, User user) throws BiNewsianException;
     void delete(Long id) throws BiNewsianException;
     Page<Activity> findPaginated(int page, int size);
+    Page<Activity> findPaginatedByUserId(int page, int size, long user);
 }

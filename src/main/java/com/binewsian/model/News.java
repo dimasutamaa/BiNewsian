@@ -38,7 +38,7 @@ public class News {
     private LocalDateTime publishedAt;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "created_by", nullable = false, updatable = false)
+    @JoinColumn(name = "created_by_id", nullable = false, updatable = false)
     private User createdBy;
 
     @CreationTimestamp

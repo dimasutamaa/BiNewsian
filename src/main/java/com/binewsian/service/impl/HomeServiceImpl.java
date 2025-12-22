@@ -34,4 +34,22 @@ public class HomeServiceImpl implements HomeService {
 
         return summary;
     }
+
+    @Override
+    public Object getContributorSummary(Long userId) {
+        Map<String, Object> summary = new HashMap<>();
+
+        summary.put("totalActivity", activityRepository.countByCreatedBy_Id(userId));
+        summary.put("totalNews", newsRepository.countByCreatedBy_Id(userId));
+
+        int publishedNewsCount  = newsRepository.countByCreatedBy_IdAndStatus(userId, NewsStatus.PUBLISHED);
+        int publishedActivityCount  = activityRepository.countByCreatedBy_IdAndStatus(userId, ActivityStatus.PUBLISHED);
+        summary.put("totalPublished", publishedNewsCount  + publishedActivityCount ); 
+
+        int draftNewsCount  = newsRepository.countByCreatedBy_IdAndStatus(userId, NewsStatus.DRAFT);
+        int draftActivityCount  = activityRepository.countByCreatedBy_IdAndStatus(userId, ActivityStatus.DRAFT);
+        summary.put("totalDraft", draftNewsCount  + draftActivityCount ); 
+
+        return summary;
+    }
 }

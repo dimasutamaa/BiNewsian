@@ -7,7 +7,6 @@ import lombok.Getter;
 import lombok.Setter;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
-import org.springframework.data.annotation.CreatedBy;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -46,7 +45,7 @@ public class Activity {
     private LocalDateTime publishedAt;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "created_by", nullable = false, updatable = false)
+    @JoinColumn(name = "created_by_id", nullable = false, updatable = false)
     private User createdBy;
 
     @CreationTimestamp
