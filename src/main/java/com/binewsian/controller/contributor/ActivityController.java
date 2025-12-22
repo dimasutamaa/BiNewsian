@@ -3,6 +3,7 @@ package com.binewsian.controller.contributor;
 import com.binewsian.annotation.RequireRole;
 import com.binewsian.constant.AppConstant;
 import com.binewsian.dto.CreateActivityRequest;
+import com.binewsian.enums.ActivityType;
 import com.binewsian.enums.Role;
 import com.binewsian.exception.BiNewsianException;
 import com.binewsian.model.User;
@@ -28,7 +29,11 @@ public class ActivityController {
     @GetMapping("/create-activity")
     public String showCreateActivityPage(HttpSession session, Model model) {
         User user = (User) session.getAttribute("user");
+        ActivityType[] activityTypes = ActivityType.values();
+        
         model.addAttribute("user", user);
+        model.addAttribute("activityTypes", activityTypes);
+        
         return "contributor/create-activity";
     }
 

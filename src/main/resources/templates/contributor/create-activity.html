@@ -35,8 +35,8 @@
                                     <div class="col-md-3 mb-3">
                                         <label for=activityType class="form-label">Type<span class="text-danger">*</span></label>
                                         <select class="form-select" id=activityType>
-                                            <option selected>Select a type</option>
-                                            <option th:each="type : ${T(com.binewsian.enums.ActivityType).values()}" 
+                                            <option value="" selected disabled>Select a type</option>
+                                            <option th:each="type : ${activityTypes}" 
                                                     th:value="${type.name()}" 
                                                     th:text="${type.displayName}">
                                         </select>
