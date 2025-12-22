@@ -373,15 +373,20 @@
                         <div class="mb-3">
                             <label for="contributorName" class="form-label">Username</label>
                             <input type="text" class="form-control" id="contributorName" required>
+                            <div id="usernameError" class="invalid-feedback"></div>
                         </div>
                         <div class="mb-3">
                             <label for="contributorEmail" class="form-label">Email</label>
-                            <input type="email" class="form-control" id="contributorEmail" required>
+                            <input type="text" class="form-control" id="contributorEmail" required>
+                            <div id="emailError" class="invalid-feedback"></div>
                         </div>
                     </div>
                     <div class="modal-footer">
                         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                        <button type="button" class="btn btn-purple">Create Contributor</button>
+                        <button id="btnCreateContributor" class="btn btn-purple">
+                            <span class="btn-text">Create Contributor</span>
+                            <span class="spinner-border spinner-border-sm d-none" role="status" aria-hidden="true"></span>
+                        </button>
                     </div>
                 </div>
             </div>
@@ -443,6 +448,18 @@
                 validateAlphaOnly($(this), $("#editCategoryError"));
             })
 
+            $("#contributorName, #contributorEmail").on("input", function () {
+                $(this).removeClass("is-invalid");
+
+                if (this.id === "contributorName") {
+                    $("#usernameError").text("");
+                }
+
+                if (this.id === "contributorEmail") {
+                    $("#emailError").text("");
+                }
+            });
+
             $(document).on("click", ".action-edit", function () {
                 const id = $(this).data("id");
                 const name = $(this).closest(".news-item").data("name");
@@ -457,6 +474,10 @@
 
             $("#createCategoryModal").on("hidden.bs.modal", function () {
                 resetCategoryForm();
+            })
+
+            $("#createContributorModal").on("hidden.bs.modal", function () {
+                resetContributorForm();
             })
 
             $("#btnCreateCategory").click(function () {
@@ -496,6 +517,90 @@
                                 text: xhr.responseText || "Unknown error"
                             })
                         }
+                    }
+                })
+            })
+
+            $("#btnCreateContributor").click(function () {
+                const $btn = $("#btnCreateContributor");
+                const $btnText = $btn.find(".btn-text");
+                const $spinner = $btn.find(".spinner-border");
+
+                const username = $("#contributorName").val().trim();
+                const email = $("#contributorEmail").val().trim();
+
+                resetContributorForm();
+
+                let hasError = false;
+
+                if (username === "") {
+                    $("#contributorName").addClass("is-invalid");
+                    $("#usernameError").text("Username is required.");
+                    hasError = true;
+                }
+
+                if (email === "") {
+                    $("#contributorEmail").addClass("is-invalid");
+                    $("#emailError").text("Email is required.");
+                    hasError = true;
+                } else if (!isValidEmail(email)) {
+                    $("#contributorEmail").addClass("is-invalid");
+                    $("#emailError").text("Invalid email format.");
+                    hasError = true;
+                }
+
+                if (hasError) return;
+
+                $btn.prop("disabled", true);
+                $btnText.text("Creating...");
+                $spinner.removeClass("d-none");
+
+                $.ajax({
+                    url: "/admin/contributors/create",
+                    method: "POST",
+                    data: {
+                        username: username,
+                        email: email
+                    },
+                    success: function () {
+                        Swal.fire({
+                            icon: "success",
+                            title: "Created!",
+                            text: "Contributor created successfully!",
+                            timer: 1600,
+                            showConfirmButton: false
+                        }).then(() => {
+                            resetContributorForm();
+                            $("#createContributorModal").modal("hide");
+                            location.reload();
+                        });
+                    },
+                    error: function (xhr) {
+                        if (xhr.status === 400) {
+                            const message = xhr.responseText;
+
+                            $("#contributorName, #contributorEmail").removeClass("is-invalid");
+                            $("#usernameError, #emailError").text("");
+
+                            if (message.toLowerCase().includes("username")) {
+                                $("#contributorName").addClass("is-invalid");
+                                $("#usernameError").text(message);
+                            } else if (message.toLowerCase().includes("email")) {
+                                $("#contributorEmail").addClass("is-invalid");
+                                $("#emailError").text(message);
+                            }
+                        } else {
+                            Swal.fire({
+                                icon: "error",
+                                title: "Failed to create contributor",
+                                text: xhr.responseText || "Unknown error"
+                            });
+                        }
+                    },
+                    complete: function () {
+                        $btn.prop("disabled", false);
+                        $btnText.text("Create Contributor");
+                        $spinner.addClass("d-none");
                     }
                 })
             })
@@ -596,6 +701,11 @@
                 })
             })
 
+            function isValidEmail(email) {
+                const emailRegex = /^[A-Za-z0-9+_.-]+@[A-Za-z0-9.-]+$/;
+                return emailRegex.test(email);
+            }
+
             function validateAlphaOnly(inputElement, errorElement) {
                 const regex = /^[A-Za-z\s]*$/;
                 const value = inputElement.val();
@@ -615,6 +725,13 @@
                 $("#categoryError").text("");
                 $("#editCategoryName").val("").removeClass("is-invalid");
                 $("#editCategoryError").text("");
+            }
+
+            function resetContributorForm() {
+                $("#contributorName").removeClass("is-invalid");
+                $("#contributorEmail").removeClass("is-invalid");
+                $("#usernameError").text("");
+                $("#emailError").text("");
             }
 
             $(document).ready(function () {
