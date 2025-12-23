@@ -618,11 +618,11 @@
 
             $(document).ready(function () {
                 const DEFAULT_TAB = "#panel-news";
-                let activeTab = localStorage.getItem("activeContributorTab");
+                let activeTab = localStorage.getItem("activeAdminTab");
 
                 if (!activeTab) {
                     activeTab = DEFAULT_TAB;
-                    localStorage.setItem("activeContributorTab", activeTab);
+                    localStorage.setItem("activeAdminTab", activeTab);
                 }
 
                 const $tabBtn = $(`[data-bs-target="${activeTab}"]`);
@@ -632,10 +632,8 @@
 
                 $('[data-bs-toggle="tab"]').on("shown.bs.tab", function (e) {
                     const target = $(e.target).data("bs-target");
-                    localStorage.setItem("activeContributorTab", target);
+                    localStorage.setItem("activeAdminTab", target);
                 })
-
-                console.log(activeTab);
             })
         </script>
     </th:block>

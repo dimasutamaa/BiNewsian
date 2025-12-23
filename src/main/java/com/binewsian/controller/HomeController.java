@@ -59,7 +59,7 @@ public class HomeController {
             Model model
     ) {
         User user = (User) session.getAttribute("user");
-        long userId = user.getId();
+        Long userId = user.getId();
 
         Page<News> news = newsService.findPaginatedByUserId(newsPage, size, userId);
         Page<Activity> activities = activityService.findPaginatedByUserId(activityPage, size, userId);

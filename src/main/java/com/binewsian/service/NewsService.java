@@ -11,6 +11,7 @@ import org.springframework.web.multipart.MultipartFile;
 public interface NewsService {
     void create(CreateNewsRequest request, MultipartFile featuredImage, User user) throws BiNewsianException;
     void delete(Long id) throws BiNewsianException;
+    News findById(Long id) throws BiNewsianException;
     Page<News> findPaginated(int page, int size);
     Page<News> findPaginatedByUserId(int page, int size, long userId);
 }

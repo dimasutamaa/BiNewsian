@@ -77,6 +77,11 @@ public class NewsServiceImpl implements NewsService {
     }
 
     @Override
+    public News findById(Long id) throws BiNewsianException {
+        return newsRepository.findById(id).orElseThrow(() -> new BiNewsianException(AppConstant.NEWS_NOT_FOUND));
+    }
+
+    @Override
     public Page<News> findPaginated(int page, int size) {
         Pageable pageable = PageRequest.of(page, size, Sort.by("createdAt").descending());
         return newsRepository.findByStatus(NewsStatus.PUBLISHED, pageable);

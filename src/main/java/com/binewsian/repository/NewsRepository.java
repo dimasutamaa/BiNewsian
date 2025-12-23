@@ -8,8 +8,8 @@ import org.springframework.data.jpa.repository.JpaRepository;
 
 public interface NewsRepository extends JpaRepository<News, Long> {
     int countByStatus(NewsStatus status);
-    int countByCreatedBy_Id(long userId);
+    int countByCreatedBy_Id(Long userId);
     int countByCreatedBy_IdAndStatus(Long userId, NewsStatus status);
     Page<News> findByStatus(NewsStatus status, Pageable pageable);
-    Page<News> findByCreatedBy_Id(long userId, Pageable pageable);
+    Page<News> findByCreatedBy_Id(Long userId, Pageable pageable);
 }

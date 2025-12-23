@@ -1,0 +1,452 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout" layout:decorate="~{layout/panel}">
+<head>
+    <title>Create Activity</title>
+</head>
+<body>
+    <div layout:fragment="content">
+        <div class="container mb-4">
+            <div class="d-flex flex-wrap gap-2">
+                <a th:href="@{/contributor/content}" class="btn btn-light" style="border:1px solid #c3c4c7;">
+                    <i class="bi bi-grid-1x2"></i> Dashboard
+                </a>
+                <a th:href="@{/contributor/create-news}" class="btn btn-light" style="border:1px solid #c3c4c7;">
+                    <i class="bi bi-plus-lg"></i> Create News
+                </a>
+                <a th:href="@{/contributor/create-activity}" class="btn btn-gradient" style="border:1px solid #c3c4c7;">
+                    <i class="bi bi-plus-lg"></i> Create Activity
+                </a>
+            </div>
+        </div>
+
+        <div class="container mb-4">
+            <div class="row">
+                <div class="col-md-12">
+                    <div class="card content-card mb-4">
+                        <div class="card-body">
+                            <form th:object="${activity}">
+                                <input type="hidden" th:field="${activity.id}" id="id">
+                                <div class="mb-3">
+                                    <label for="title" class="form-label">Activity Title<span class="text-danger">*</span></label>
+                                    <input type="text" class="form-control" th:field="${activity.title}" id="title">
+                                    <div id="titleError" class="invalid-feedback"></div>
+                                </div>
+
+                                <div class="row">
+                                    <div class="col-md-3 mb-3">
+                                        <label for=activityType class="form-label">Type<span class="text-danger">*</span></label>
+                                        <select class="form-select" th:field="${activity.type}" id=activityType>
+                                            <option value="" disabled>Select a type</option>
+                                            <option th:each="type : ${activityTypes}" 
+                                                    th:value="${type.name()}" 
+                                                    th:text="${type.displayName}">
+                                        </select>
+                                        <div id="activityTypeError" class="invalid-feedback"></div>
+                                    </div>
+
+                                    <div class="col-md-3 mb-3">
+                                        <label for="quota" class="form-label">Quota<span class="text-danger">*</span></label>
+                                        <input type="number" class="form-control" th:field="${activity.quota}" id="quota" min="1" placeholder="Enter quota for this activity">
+                                        <div id="quotaerror" class="invalid-feedback"></div>
+                                    </div>
+
+                                    <div class="col-md-3 mb-3">
+                                        <label for="rewardAmount" class="form-label">Point/Hour Amount<span class="text-danger">*</span></label>
+                                        <input type="number" class="form-control" th:field="${activity.rewardAmount}" id="rewardAmount" min="1" placeholder="Enter reward amount">
+                                        <div id="rewardAmountError" class="invalid-feedback"></div>
+                                    </div>
+
+                                    <div class="col-md-3 mb-3">
+                                        <label for="registrationLink" class="form-label">Registration Link<span class="text-danger">*</span></label>
+                                        <input type="text" class="form-control" th:field="${activity.registrationLink}" id="registrationLink" placeholder="Enter registration link">
+                                        <div id="registrationLinkError" class="invalid-feedback"></div>
+                                    </div>
+                                </div>
+
+                                <div class="row">
+                                    <div class="col-md-3 mb-3">
+                                        <label for="location" class="form-label">Location<span class="text-danger">*</span></label>
+                                        <select class="form-select" th:field="${activity.location}" id="location">
+                                            <option value="" disabled>Select location</option>
+                                            <option value="Onsite">Onsite</option>
+                                            <option value="Online">Online</option>
+                                        </select>
+                                        <div id="locationError" class="invalid-feedback"></div>
+                                    </div>
+
+                                    <div class="col-md-3 mb-3">
+                                        <label class="form-label">Time<span class="text-danger">*</span></label>
+                                        <div class="d-flex align-items-center gap-2">
+                                            <div class="flex-fill">
+                                                <label for="timeStart" class="visually-hidden">Start Time</label>
+                                                <input type="time" class="form-control" th:field="${activity.timeStart}" id="timeStart" placeholder="Start">
+                                            </div>
+                                            <div class="flex-fill">
+                                                <label for="timeEnd" class="visually-hidden">End Time</label>
+                                                <input type="time" class="form-control" th:field="${activity.timeEnd}" id="timeEnd" placeholder="End">
+                                            </div>
+                                        </div>
+                                        <div id="timeError" class="invalid-feedback"></div>
+                                    </div>
+
+                                    <div class="col-md-3 mb-3">
+                                        <label for="activityDate" class="form-label">Date<span class="text-danger">*</span></label>
+                                        <input type="date" class="form-control" th:field="${activity.activityDate}" id="activityDate">
+                                        <div id="activityDateError" class="invalid-feedback"></div>
+                                    </div>
+
+                                    <div class="col-md-3 mb-3">
+                                        <label for="registrationDeadline" class="form-label">Registration Deadline<span class="text-danger">*</span></label>
+                                        <input type="datetime-local" class="form-control" th:field="${activity.registrationDeadline}">
+                                        <div id="registrationDeadlineError" class="invalid-feedback"></div>
+                                    </div>
+                                </div>
+
+                                <div class="mb-3">
+                                    <label class="form-label">Activity Details<span class="text-danger">*</span></label>
+                                    <div id="activityEditor" style="height: 400px;"></div>
+                                    <input type="hidden" th:field="${activity.details}" id="activityDetails">
+                                    <div id="activityEditorError" class="invalid-feedback"></div>
+                                </div>
+
+                                <div class="d-flex justify-content-end gap-2 mt-4">
+                                    <button type="submit" th:if="${canEdit}" id="btnSaveDraft" class="btn btn-outline-secondary">
+                                        <i class="bi bi-save me-2"></i> Save as Draft
+                                    </button>
+
+                                    <button type="submit" th:if="${canEdit}" id="btnPublish" class="btn btn-purple">
+                                        <i class="bi bi-check-circle me-2"></i> Publish
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <th:block layout:fragment="scripts">
+        <script>
+            const activityEditor = new Quill("#activityEditor", quillConfig);
+            const initialContent = $("#activityDetails").val();
+            if (initialContent) {
+                activityEditor.root.innerHTML = initialContent;
+            }
+
+            function setInvalid(id, message) {
+                $(`#${id}`).addClass("is-invalid");
+                $(`#${id}Error`).text(message);
+            }
+
+            function clearInvalid(id) {
+                $(`#${id}`).removeClass("is-invalid");
+                $(`#${id}Error`).text("");
+            }
+
+            function setInvalidGroup(ids, errorId, message) {
+                ids.forEach((id) => $(`#${id}`).addClass("is-invalid"));
+                $(`#${errorId}`).text(message).addClass("d-block");
+            }
+
+            function clearInvalidGroup(ids, errorId) {
+                ids.forEach((id) => $(`#${id}`).removeClass("is-invalid"));
+                $(`#${errorId}`).text("").removeClass("d-block");
+            }
+
+            function setInvalidEditor(message) {
+                $("#activityEditor").addClass("is-invalid form-control").css("border", "1px solid #dc3545");
+                $("#activityEditorError").text(message).addClass("d-block");
+            }
+
+            function clearInvalidEditor() {
+                $("#activityEditor").removeClass("is-invalid form-control").css("border", "");
+                $("#activityEditorError").text("").removeClass("d-block");
+            }
+
+            function getDateOnly(dateInput) {
+                if (!dateInput) return null;
+                const date = new Date(dateInput);
+                date.setHours(0, 0, 0, 0);
+                return date;
+            };
+
+            function getDateTime(dateInput) {
+                if (!dateInput) return null;
+                return new Date(dateInput);
+            }
+
+            function normalizeUrl(url) {
+                if (!/^https?:\/\//i.test(url)) {
+                    return "https://" + url;
+                }
+                return url;
+            }
+
+            function isValidUrl(url) {
+                try {
+                    new URL(url);
+                    return true;
+                } catch {
+                    return false;
+                }
+            }
+
+            function clearValidation() {
+                $(".is-invalid").removeClass("is-invalid");
+                $(".invalid-feedback").text("").removeClass("d-block");
+                clearInvalidEditor();
+            }
+
+            function validateBaseDateTime() {
+                let isValid = true;
+
+                const activityDateRaw = $("#activityDate").val();
+                const timeStart = $("#timeStart").val();
+                const timeEnd = $("#timeEnd").val();
+                const deadlineRaw = $("#registrationDeadline").val();
+
+                if (!activityDateRaw && !timeStart && !timeEnd && !deadlineRaw) {
+                    return true;
+                }
+
+                const activityDate = activityDateRaw ? getDateOnly(activityDateRaw) : null;
+                const today = getDateOnly(new Date());
+
+                if (activityDate && activityDate < today) {
+                    setInvalid("activityDate", "Activity date cannot be in the past");
+                    isValid = false;
+                }
+
+                if (timeStart && timeEnd && timeStart >= timeEnd) {
+                    setInvalidGroup(["timeStart", "timeEnd"], "timeError", "Please select a valid time range");
+                    isValid = false;
+                }
+
+                if (activityDate && timeStart && deadlineRaw) {
+                    const deadline = getDateTime(deadlineRaw);
+                    const activityStart = new Date(`${activityDateRaw}T${timeStart}`);
+
+                    if (deadline >= activityStart) {
+                        setInvalid("registrationDeadline", "Registration deadline must be before activity start time");
+                        isValid = false;
+                    }
+                }
+
+                return isValid;
+            }
+
+            function validateDraft() {
+                return validateBaseDateTime();
+            }
+
+            function validatePublishDateTime() {
+                let isValid = true;
+
+                const activityDate = $("#activityDate").val();
+                if (!activityDate) {
+                    setInvalid("activityDate", "Activity date is required");
+                    isValid = false;
+                }
+
+                const timeStart = $("#timeStart").val();
+                const timeEnd = $("#timeEnd").val();
+                if (!timeStart || !timeEnd) {
+                    setInvalidGroup(["timeStart", "timeEnd"], "timeError", "Start and end time are required");
+                    isValid = false;
+                }
+
+                const deadline = $("#registrationDeadline").val();
+                if (!deadline) {
+                    setInvalid("registrationDeadline", "Registration deadline is required");
+                    isValid = false;
+                }
+
+                if (!isValid) return false;
+                return validateBaseDateTime();
+            }
+
+            function validatePublish() {
+                let isValid = true;
+                isValid = validatePublishDateTime() && isValid;
+
+                const title = $("#title").val();
+                if (!title) {
+                    setInvalid("title", "Title is required");
+                    isValid = false;
+                }
+
+                const activityType = $("#activityType").val();
+                if (!activityType || activityType === "Select a type") {
+                    setInvalid("activityType", "Please select a valid type");
+                    isValid = false;
+                }
+
+                const quota = parseInt($("#quota").val());
+                if (!quota || isNaN(quota) || parseInt(quota) <= 0) {
+                    setInvalid("quota", "Please enter a valid quota");
+                    isValid = false;
+                }
+
+                const rewardAmount = parseInt($("#rewardAmount").val());
+                if (!rewardAmount || isNaN(rewardAmount) || parseInt(rewardAmount) <= 0) {
+                    setInvalid("rewardAmount", "Please enter a valid point/hour amount");
+                    isValid = false;
+                }
+
+                const registrationLink = $("#registrationLink").val();
+                if (!registrationLink || !isValidUrl(normalizeUrl(registrationLink))) {
+                    setInvalid("registrationLink", "Please enter a valid registration link");
+                    isValid = false;
+                }
+
+                const location = $("#location").val();
+                if (!location || location === "Select location") {
+                    setInvalid("location", "Please select a valid location");
+                    isValid = false;
+                }
+
+                const editorText = activityEditor.getText().trim();
+                if (editorText.length === 0) {
+                    setInvalidEditor("Activity details cannot be empty");
+                    isValid = false;
+                }
+
+                return isValid;
+            }
+
+            function emptyToNull(value) {
+                return value === "" ? null : value;
+            }
+
+            function safeParseInt(value) {
+                const parsed = parseInt(value);
+                return Number.isNaN(parsed) ? null : parsed;
+            }
+
+            function buildPayload(isDraft) {
+                const activityTypeValue = $("#activityType").val();
+                const locationValue = $("#location").val();
+
+                let registrationLink = $("#registrationLink").val();
+                if (registrationLink) {
+                    registrationLink = normalizeUrl(registrationLink);
+                }
+
+                const editorText = activityEditor.getText().trim();
+                const editorHtml = activityEditor.root.innerHTML;
+
+                return {
+                    title: emptyToNull($("#title").val().trim()),
+                    activityType: activityTypeValue === "Select a type" ? null : activityTypeValue,
+                    quota: safeParseInt($("#quota").val()),
+                    rewardAmount: safeParseInt($("#rewardAmount").val()),
+                    registrationLink: emptyToNull(registrationLink),
+                    location: locationValue === "Select location" ? null : locationValue,
+                    timeStart: emptyToNull($("#timeStart").val()),
+                    timeEnd: emptyToNull($("#timeEnd").val()),
+                    activityDate: emptyToNull($("#activityDate").val()),
+                    registrationDeadline: emptyToNull($("#registrationDeadline").val()),
+                    details: editorText.length === 0 ? null : editorHtml,
+                    isDraft: isDraft
+                };
+            }
+
+            $("input, select").on("input change", function () {
+                clearInvalid(this.id);
+            });
+
+            $("#timeStart, #timeEnd").on("change", function () {
+                const start = $("#timeStart").val();
+                const end = $("#timeEnd").val();
+
+                if (start && end && start < end) {
+                    clearInvalidGroup(["timeStart", "timeEnd"], "timeError");
+                }
+            });
+
+            $("#registrationDeadline").on("change", function () {
+                const now = getDateOnly(new Date());
+                const deadline = getDateOnly($("#registrationDeadline").val());
+                const activityDate = getDateOnly($("#activityDate").val());
+
+                if (deadline && deadline > now && (!activityDate || deadline < activityDate)) {
+                    clearInvalid("registrationDeadline");
+                }
+            });
+
+            activityEditor.on('text-change', function() {
+                if (activityEditor.getText().trim().length > 0) {
+                    clearInvalidEditor();
+                }
+            });
+
+            $("form").on("submit", function (e) {
+                e.preventDefault();
+                clearValidation();
+
+                const targetId = e.originalEvent.submitter.id;
+                const isDraft = targetId === "btnSaveDraft";
+
+                const isValid = isDraft ? validateDraft() : validatePublish();
+                if (!isValid) return;
+
+                const id = $("#id").val();
+                const data = buildPayload(isDraft);
+
+                $.ajax({
+                    url: `/contributor/activities/${id}`,
+                    method: "PUT",
+                    contentType: "application/json",
+                    data: JSON.stringify(data),
+                    success: function () {
+                        if (isDraft) {
+                            Swal.fire({
+                                icon: "success",
+                                title: "Saved as Draft!",
+                                text: "Your activity has been saved as a draft.",
+                                timer: 2000,
+                                showConfirmButton: false
+                            }).then(() => {
+                                 window.location.href = "/contributor/content";
+                            });
+                        } else {
+                            Swal.fire({
+                                icon: "success",
+                                title: "Activity Published!",
+                                text: "Your activity has been published successfully.",
+                                timer: 2000,
+                                showConfirmButton: false
+                            }).then(() => {
+                                 window.location.href = "/contributor/content";
+                            });
+                        }
+                    },
+
+                    error: function (xhr) {
+                        let message = "Unexpected server error.";
+
+                        if (xhr.status === 400 && xhr.responseText) {
+                            message = xhr.responseText;
+                        } else if (xhr.status === 500) {
+                            message = xhr.responseText || "Unexpected server error.";
+                        }
+
+                        Swal.fire({
+                            icon: "error",
+                            title: isDraft ? "Failed to save draft" : "Failed to publish activity",
+                            text: message
+                        })
+                    }
+                })
+            })
+        </script>
+        <style>
+            #activityEditor.is-invalid .ql-toolbar,
+            #activityEditor.is-invalid .ql-editor {
+                border-color: #dc3545 !important;
+            }
+        </style>
+    </th:block>
+</body>
+</html>

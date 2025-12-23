@@ -6,6 +6,7 @@ import com.binewsian.dto.CreateNewsRequest;
 import com.binewsian.enums.Role;
 import com.binewsian.exception.BiNewsianException;
 import com.binewsian.model.Category;
+import com.binewsian.model.News;
 import com.binewsian.model.User;
 import com.binewsian.service.CategoryService;
 import com.binewsian.service.NewsService;
@@ -39,6 +40,21 @@ public class NewsController {
         model.addAttribute("categories", categories);
 
         return "contributor/create-news";
+    }
+
+    @GetMapping("/edit-news/{id}")
+    public String showEditNewsPage(@PathVariable Long id, HttpSession session, Model model) {
+        try {
+            User user = (User) session.getAttribute("user");
+            News news = newsService.findById(id);
+
+            model.addAttribute("user", user);
+            model.addAttribute("news", news);
+            
+            return "contributor/edit-news";
+        } catch (BiNewsianException e) {
+            return "redirect:/contributor/content?error=" + e.getMessage();
+        }
     }
 
     @PostMapping(value = "/news/create", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)

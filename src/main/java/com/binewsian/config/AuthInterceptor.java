@@ -1,15 +1,11 @@
 package com.binewsian.config;
 
 import com.binewsian.annotation.RequireRole;
-import com.binewsian.constant.AppConstant;
 import com.binewsian.enums.Role;
 import com.binewsian.model.User;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
-
-import java.io.IOException;
-
 import org.springframework.stereotype.Component;
 import org.springframework.web.method.HandlerMethod;
 import org.springframework.web.servlet.HandlerInterceptor;

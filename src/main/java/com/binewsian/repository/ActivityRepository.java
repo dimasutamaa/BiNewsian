@@ -9,7 +9,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 public interface ActivityRepository extends JpaRepository<Activity, Long> {
     int countByStatus(ActivityStatus status);
     int countByCreatedBy_Id(Long userId);
-    int countByCreatedBy_IdAndStatus(Long id, ActivityStatus status);
+    int countByCreatedBy_IdAndStatus(Long userId, ActivityStatus status);
     Page<Activity> findByStatus(ActivityStatus status, Pageable pageable);
     Page<Activity> findByCreatedBy_Id(Long userId, Pageable pageable);
 }

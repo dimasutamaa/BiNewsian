@@ -57,9 +57,52 @@ public class ActivityServiceImpl implements ActivityService {
     }
 
     @Override
+    public void update(Long id, CreateActivityRequest request, User user) throws BiNewsianException {
+        Activity activity = activityRepository.findById(id).orElseThrow(() -> new BiNewsianException(AppConstant.ACTIVITY_NOT_FOUND));
+
+        if (!activity.getCreatedBy().getId().equals(user.getId())) {
+            throw new BiNewsianException("You are not authorized to edit this activity.");
+        }
+
+        if (activity.getStatus().equals(ActivityStatus.PUBLISHED)) {
+            throw new BiNewsianException("Published activity cannot be edited.");
+        }
+
+        boolean isDraft = request.isDraft();
+
+        if (isDraft) {
+            validateDraft(request);
+        } else {
+            validatePublish(request);
+        }
+
+        activity.setTitle(request.title());
+        activity.setType(request.activityType());
+        activity.setQuota(request.quota());
+        activity.setRewardAmount(request.rewardAmount());
+        activity.setRegistrationLink(request.registrationLink());
+        activity.setLocation(request.location());
+        activity.setTimeStart(request.timeStart());
+        activity.setTimeEnd(request.timeEnd());
+        activity.setActivityDate(request.activityDate());
+        activity.setRegistrationDeadline(request.registrationDeadline());
+        activity.setDetails(request.details());
+        activity.setStatus(isDraft ? ActivityStatus.DRAFT : ActivityStatus.PUBLISHED);
+        activity.setPublishedAt(isDraft ? null : LocalDateTime.now());
+        activity.setCreatedBy(user);
+
+        activityRepository.save(activity);
+    }
+
+    @Override
     public void delete(Long id) throws BiNewsianException {
         Activity activity = activityRepository.findById(id).orElseThrow(() -> new BiNewsianException(AppConstant.ACTIVITY_NOT_FOUND));
         activityRepository.delete(activity);
+    }
+
+    @Override
+    public Activity findById(Long id) throws BiNewsianException {
+        return activityRepository.findById(id).orElseThrow(() -> new BiNewsianException(AppConstant.ACTIVITY_NOT_FOUND));
     }
 
     @Override
