@@ -8,7 +8,5 @@ public class AppConstant {
 
     public final static String ACTIVITY_NOT_FOUND = "Activity not found.";
 
-    public static final String UNAUTHORIZED = "Unauthorized access.";
-    public static final String FORBIDDEN = "Access denied.";
     public final static String UNEXPECTED_SERVER_ERROR = "Unexpected server error.";
 }
