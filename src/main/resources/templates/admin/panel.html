@@ -301,11 +301,73 @@
 
                         <!-- Manage Contributor  -->
                         <div class="tab-pane fade" id="panel-contributor" role="tabpanel" aria-labelledby="tab-contributor">
+                            <!-- Search -->
                             <div class="search-wrap mb-3 d-flex align-items-center gap-2">
                                 <i class="bi bi-search text-muted"></i>
-                                <input type="text" class="form-control" placeholder="Search Contributor" aria-label="Search Contributor">
+                                <input id="searchContributor" type="text" class="form-control" placeholder="Search Contributor">
                             </div>
-                            <div class="d-flex justify-content-center align-items-center text-muted">No contributors yet.</div>
+
+                            <!-- Category List -->
+                            <div id="contributorList" th:if="${!#lists.isEmpty(contributors)}">
+                                <div class="news-item" th:each="contributor : ${contributors}" th:attr="data-name=${contributor.username}">
+                                    <div class="d-flex align-items-start">
+                                        <div class="flex-grow-1">
+                                            <div class="d-flex justify-content-between align-items-start">
+                                                <div>
+                                                    <h6 class="fw-semibold mb-1" th:text="${contributor.username}"></h6>
+
+                                                    <small class="text-muted d-flex align-items-center gap-1">
+                                                        <i class="bi bi-envelope"></i>
+                                                        <span th:text="${contributor.email}">-</span>
+                                                    </small>
+                                                </div>
+
+<!--                                                <div class="dropdown">-->
+<!--                                                    <button class="btn btn-link p-1 ellipsis-btn" data-bs-toggle="dropdown">-->
+<!--                                                        <i class="bi bi-three-dots-vertical"></i>-->
+<!--                                                    </button>-->
+<!--                                                    <ul class="dropdown-menu dropdown-menu-end">-->
+<!--                                                        <li>-->
+<!--                                                            <button class="dropdown-item text-danger action-delete" th:data-id="${contributor.id}" th:data-type="contributor">-->
+<!--                                                                <i class="bi bi-trash me-2"></i> Delete-->
+<!--                                                            </button>-->
+<!--                                                        </li>-->
+<!--                                                    </ul>-->
+<!--                                                </div>-->
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div th:if="${#lists.isEmpty(contributors)}" class="text-muted text-center">
+                                No contributors yet.
+                            </div>
+
+                            <div id="noContributor" style="display:none;" class="text-muted text-center">
+                                No matching contributors.
+                            </div>
+
+                            <!-- Pagination -->
+                            <nav th:if="${contributorTotalPages > 1}" class="mt-3">
+                                <ul class="pagination justify-content-center">
+                                    <li class="page-item" th:classappend="${contributorCurrentPage == 0} ? 'disabled'">
+                                        <a class="page-link"th:href="@{/admin/panel(contributorPage=${contributorCurrentPage - 1}, tab='contributor')}">
+                                            &laquo;
+                                        </a>
+                                    </li>
+
+                                    <li class="page-item" th:each="i : ${#numbers.sequence(0, contributorTotalPages - 1)}" th:classappend="${i == contributorCurrentPage} ? 'active'">
+                                        <a class="page-link" th:text="${i + 1}" th:href="@{/admin/panel(contributorPage=${i}, tab='contributor')}"></a>
+                                    </li>
+
+                                    <li class="page-item" th:classappend="${contributorCurrentPage + 1 == contributorTotalPages} ? 'disabled'">
+                                        <a class="page-link" th:href="@{/admin/panel(contributorPage=${contributorCurrentPage + 1}, tab='contributor')}">
+                                            &raquo;
+                                        </a>
+                                    </li>
+                                </ul>
+                            </nav>
                         </div>
                     </div>
                 </div>
@@ -372,15 +434,20 @@
                         <div class="mb-3">
                             <label for="contributorName" class="form-label">Username</label>
                             <input type="text" class="form-control" id="contributorName" required>
+                            <div id="usernameError" class="invalid-feedback"></div>
                         </div>
                         <div class="mb-3">
                             <label for="contributorEmail" class="form-label">Email</label>
-                            <input type="email" class="form-control" id="contributorEmail" required>
+                            <input type="text" class="form-control" id="contributorEmail" required>
+                            <div id="emailError" class="invalid-feedback"></div>
                         </div>
                     </div>
                     <div class="modal-footer">
                         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                        <button type="button" class="btn btn-purple">Create Contributor</button>
+                        <button id="btnCreateContributor" class="btn btn-purple">
+                            <span class="btn-text">Create Contributor</span>
+                            <span class="spinner-border spinner-border-sm d-none" role="status" aria-hidden="true"></span>
+                        </button>
                     </div>
                 </div>
             </div>
@@ -392,15 +459,15 @@
             $("#searchCategory").on("input", function () {
                 const q = $(this).val().toLowerCase();
                 let matches = 0;
-            
+
                 $("#categoryList .news-item").each(function () {
                     const name = $(this).data("name").toLowerCase();
                     const isMatch = name.includes(q);
-            
+
                     $(this).toggle(isMatch);
                     if (isMatch) matches++;
                 });
-            
+
                 $("#noCategory").toggle(matches === 0 && q.length > 0);
             })
 
@@ -434,6 +501,21 @@
                 $("#noActivities").toggle(matches === 0 && q.length > 0);
             })
 
+            $("#searchContributor").on("input", function () {
+                const q = $(this).val().toLowerCase();
+                let matches = 0;
+
+                $("#contributorList .news-item").each(function () {
+                    const name = $(this).data("name").toLowerCase();
+                    const isMatch = name.includes(q);
+
+                    $(this).toggle(isMatch);
+                    if (isMatch) matches++;
+                });
+
+                $("#noContributor").toggle(matches === 0 && q.length > 0);
+            })
+
             $("#categoryName").on("input", function () {
                 validateAlphaOnly($(this), $("#categoryError"));
             })
@@ -441,6 +523,18 @@
             $("#editCategoryName").on("input", function () {
                 validateAlphaOnly($(this), $("#editCategoryError"));
             })
+
+            $("#contributorName, #contributorEmail").on("input", function () {
+                $(this).removeClass("is-invalid");
+
+                if (this.id === "contributorName") {
+                    $("#usernameError").text("");
+                }
+
+                if (this.id === "contributorEmail") {
+                    $("#emailError").text("");
+                }
+            });
 
             $(document).on("click", ".action-edit", function () {
                 const id = $(this).data("id");
@@ -456,6 +550,10 @@
 
             $("#createCategoryModal").on("hidden.bs.modal", function () {
                 resetCategoryForm();
+            })
+
+            $("#createContributorModal").on("hidden.bs.modal", function () {
+                resetContributorForm();
             })
 
             $("#btnCreateCategory").click(function () {
@@ -495,6 +593,90 @@
                                 text: xhr.responseText || "Unknown error"
                             })
                         }
+                    }
+                })
+            })
+
+            $("#btnCreateContributor").click(function () {
+                const $btn = $("#btnCreateContributor");
+                const $btnText = $btn.find(".btn-text");
+                const $spinner = $btn.find(".spinner-border");
+
+                const username = $("#contributorName").val().trim();
+                const email = $("#contributorEmail").val().trim();
+
+                resetContributorForm();
+
+                let hasError = false;
+
+                if (username === "") {
+                    $("#contributorName").addClass("is-invalid");
+                    $("#usernameError").text("Username is required.");
+                    hasError = true;
+                }
+
+                if (email === "") {
+                    $("#contributorEmail").addClass("is-invalid");
+                    $("#emailError").text("Email is required.");
+                    hasError = true;
+                } else if (!isValidEmail(email)) {
+                    $("#contributorEmail").addClass("is-invalid");
+                    $("#emailError").text("Invalid email format.");
+                    hasError = true;
+                }
+
+                if (hasError) return;
+
+                $btn.prop("disabled", true);
+                $btnText.text("Creating...");
+                $spinner.removeClass("d-none");
+
+                $.ajax({
+                    url: "/admin/contributors/create",
+                    method: "POST",
+                    data: {
+                        username: username,
+                        email: email
+                    },
+                    success: function () {
+                        Swal.fire({
+                            icon: "success",
+                            title: "Created!",
+                            text: "Contributor created successfully!",
+                            timer: 1600,
+                            showConfirmButton: false
+                        }).then(() => {
+                            resetContributorForm();
+                            $("#createContributorModal").modal("hide");
+                            location.reload();
+                        });
+                    },
+                    error: function (xhr) {
+                        if (xhr.status === 400) {
+                            const message = xhr.responseText;
+
+                            $("#contributorName, #contributorEmail").removeClass("is-invalid");
+                            $("#usernameError, #emailError").text("");
+
+                            if (message.toLowerCase().includes("username")) {
+                                $("#contributorName").addClass("is-invalid");
+                                $("#usernameError").text(message);
+                            } else if (message.toLowerCase().includes("email")) {
+                                $("#contributorEmail").addClass("is-invalid");
+                                $("#emailError").text(message);
+                            }
+                        } else {
+                            Swal.fire({
+                                icon: "error",
+                                title: "Failed to create contributor",
+                                text: xhr.responseText || "Unknown error"
+                            });
+                        }
+                    },
+                    complete: function () {
+                        $btn.prop("disabled", false);
+                        $btnText.text("Create Contributor");
+                        $spinner.addClass("d-none");
                     }
                 })
             })
@@ -595,6 +777,11 @@
                 })
             })
 
+            function isValidEmail(email) {
+                const emailRegex = /^[A-Za-z0-9+_.-]+@[A-Za-z0-9.-]+$/;
+                return emailRegex.test(email);
+            }
+
             function validateAlphaOnly(inputElement, errorElement) {
                 const regex = /^[A-Za-z\s]*$/;
                 const value = inputElement.val();
@@ -614,6 +801,13 @@
                 $("#categoryError").text("");
                 $("#editCategoryName").val("").removeClass("is-invalid");
                 $("#editCategoryError").text("");
+            }
+
+            function resetContributorForm() {
+                $("#contributorName").removeClass("is-invalid");
+                $("#contributorEmail").removeClass("is-invalid");
+                $("#usernameError").text("");
+                $("#emailError").text("");
             }
 
             $(document).ready(function () {
