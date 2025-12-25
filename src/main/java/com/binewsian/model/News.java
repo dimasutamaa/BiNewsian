@@ -1,6 +1,5 @@
 package com.binewsian.model;
 
-import com.binewsian.enums.NewsCategory;
 import com.binewsian.enums.NewsStatus;
 import jakarta.persistence.*;
 import lombok.Getter;
@@ -21,8 +20,9 @@ public class News {
 
     private String title;
 
-    @Enumerated(EnumType.STRING)
-    private NewsCategory category;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "category_id")
+    private Category category;
 
     private String summary;
 
@@ -33,9 +33,14 @@ public class News {
     @Column(nullable = false)
     private NewsStatus status;
 
+    private String featuredImageFileName;
     private String featuredImageKey;
     private String featuredImageUrl;
     private LocalDateTime publishedAt;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "created_by_id", nullable = false, updatable = false)
+    private User createdBy;
 
     @CreationTimestamp
     @Column(name = "created_at", nullable = false, updatable = false)

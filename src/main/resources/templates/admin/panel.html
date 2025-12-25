@@ -117,8 +117,7 @@
                                             <div class="d-flex flex-wrap gap-2 mb-1">
                                                 <span class="badge badge-soft">
                                                     <i class="bi bi-tag"></i>
-                                                    <!-- Category Nanti Bisa Enhancement Langsung Ambil Dari Table Category -->
-                                                    <span th:text="${news.category}">-</span>
+                                                    <span th:text="${news.category.name}">-</span>
                                                 </span>
                                                 <span class="text-muted small">
                                                     • <span th:text="${#temporals.format(news.createdAt, 'dd MMMM yyyy')}">-</span>
@@ -209,17 +208,17 @@
                             <nav th:if="${activitiesTotalPages > 1}" class="mt-3">
                                 <ul class="pagination justify-content-center">
                                     <li class="page-item" th:classappend="${activitiesCurrentPage == 0} ? 'disabled'">
-                                        <a class="page-link" th:href="@{/admin/panel(activityPage=${activitiesCurrentPage - 1}, tab='news')}">
+                                        <a class="page-link" th:href="@{/admin/panel(activityPage=${activitiesCurrentPage - 1}, tab='activity')}">
                                             &laquo;
                                         </a>
                                     </li>
 
                                     <li class="page-item" th:each="i : ${#numbers.sequence(0, activitiesTotalPages - 1)}" th:classappend="${i == activitiesCurrentPage} ? 'active'">
-                                        <a class="page-link" th:text="${i + 1}" th:href="@{/admin/panel(activityPage=${i}, tab='news')}"></a>
+                                        <a class="page-link" th:text="${i + 1}" th:href="@{/admin/panel(activityPage=${i}, tab='activity')}"></a>
                                     </li>
 
                                     <li class="page-item" th:classappend="${activitiesCurrentPage + 1 == activitiesTotalPages} ? 'disabled'">
-                                        <a class="page-link" th:href="@{/admin/panel(activityPage=${activitiesCurrentPage + 1}, tab='news')}">
+                                        <a class="page-link" th:href="@{/admin/panel(activityPage=${activitiesCurrentPage + 1}, tab='activity')}">
                                             &raquo;
                                         </a>
                                     </li>

@@ -18,8 +18,6 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 
-import java.util.List;
-
 @Controller
 @RequiredArgsConstructor
 public class HomeController {
@@ -52,9 +50,36 @@ public class HomeController {
 
     @GetMapping("/contributor/content")
     @RequireRole(Role.CONTRIBUTOR)
-    public String contributorContent(HttpSession session, Model model) {
+    public String contributorContent(
+            @RequestParam(defaultValue = "0") int newsPage,
+            @RequestParam(defaultValue = "0") int activityPage,
+            @RequestParam(defaultValue = "5") int size,
+            @RequestParam(defaultValue = "news") String tab,
+            HttpSession session,
+            Model model
+    ) {
         User user = (User) session.getAttribute("user");
+        Long userId = user.getId();
+
+        Page<News> news = newsService.findPaginatedByUserId(newsPage, size, userId);
+        Page<Activity> activities = activityService.findPaginatedByUserId(activityPage, size, userId);
+
+        model.addAttribute("summary", homeService.getContributorSummary(userId));
         model.addAttribute("user", user);
+
+        // News
+        model.addAttribute("news", news.getContent());
+        model.addAttribute("newsCurrentPage", newsPage);
+        model.addAttribute("newsTotalPages", news.getTotalPages());
+
+        // Activity
+        model.addAttribute("activities", activities.getContent());
+        model.addAttribute("activitiesCurrentPage", activityPage);
+        model.addAttribute("activitiesTotalPages", activities.getTotalPages());
+
+        // Active tab
+        model.addAttribute("activeTab", tab);
+
         return "contributor/content";
     }
 

@@ -7,13 +7,13 @@
     <div layout:fragment="content">
         <div class="container mb-4">
             <div class="d-flex flex-wrap gap-2">
-                <a th:href="@{/contributor/content}" class="btn btn-light" style="border:1px solid #c3c4c7;">
+                <a th:href="@{/contributor/content}" class="btn btn-gradient" style="border:1px solid #c3c4c7;">
                     <i class="bi bi-grid-1x2"></i> Dashboard
                 </a>
                 <a th:href="@{/contributor/create-news}" class="btn btn-light" style="border:1px solid #c3c4c7;">
                     <i class="bi bi-plus-lg"></i> Create News
                 </a>
-                <a th:href="@{/contributor/create-activity}" class="btn btn-gradient" style="border:1px solid #c3c4c7;">
+                <a th:href="@{/contributor/create-activity}" class="btn btn-light" style="border:1px solid #c3c4c7;">
                     <i class="bi bi-plus-lg"></i> Create Activity
                 </a>
             </div>
@@ -24,18 +24,19 @@
                 <div class="col-md-12">
                     <div class="card content-card mb-4">
                         <div class="card-body">
-                            <form>
+                            <form th:object="${activity}">
+                                <input type="hidden" th:field="${activity.id}" id="id">
                                 <div class="mb-3">
                                     <label for="title" class="form-label">Activity Title<span class="text-danger">*</span></label>
-                                    <input type="text" class="form-control" id="title">
+                                    <input type="text" class="form-control" th:field="${activity.title}" id="title">
                                     <div id="titleError" class="invalid-feedback"></div>
                                 </div>
 
                                 <div class="row">
                                     <div class="col-md-3 mb-3">
                                         <label for=activityType class="form-label">Type<span class="text-danger">*</span></label>
-                                        <select class="form-select" id=activityType>
-                                            <option value="" selected disabled>Select a type</option>
+                                        <select class="form-select" th:field="${activity.type}" id=activityType>
+                                            <option value="" disabled>Select a type</option>
                                             <option th:each="type : ${activityTypes}" 
                                                     th:value="${type.name()}" 
                                                     th:text="${type.displayName}">
@@ -45,19 +46,19 @@
 
                                     <div class="col-md-3 mb-3">
                                         <label for="quota" class="form-label">Quota<span class="text-danger">*</span></label>
-                                        <input type="number" class="form-control" id="quota" min="1" placeholder="Enter quota for this activity">
+                                        <input type="number" class="form-control" th:field="${activity.quota}" id="quota" min="1" placeholder="Enter quota for this activity">
                                         <div id="quotaerror" class="invalid-feedback"></div>
                                     </div>
 
                                     <div class="col-md-3 mb-3">
                                         <label for="rewardAmount" class="form-label">Point/Hour Amount<span class="text-danger">*</span></label>
-                                        <input type="number" class="form-control" id="rewardAmount" min="1" placeholder="Enter reward amount">
+                                        <input type="number" class="form-control" th:field="${activity.rewardAmount}" id="rewardAmount" min="1" placeholder="Enter reward amount">
                                         <div id="rewardAmountError" class="invalid-feedback"></div>
                                     </div>
 
                                     <div class="col-md-3 mb-3">
                                         <label for="registrationLink" class="form-label">Registration Link<span class="text-danger">*</span></label>
-                                        <input type="text" class="form-control" id="registrationLink" placeholder="Enter registration link">
+                                        <input type="text" class="form-control" th:field="${activity.registrationLink}" id="registrationLink" placeholder="Enter registration link">
                                         <div id="registrationLinkError" class="invalid-feedback"></div>
                                     </div>
                                 </div>
@@ -65,8 +66,8 @@
                                 <div class="row">
                                     <div class="col-md-3 mb-3">
                                         <label for="location" class="form-label">Location<span class="text-danger">*</span></label>
-                                        <select class="form-select" id="location">
-                                            <option selected>Select location</option>
+                                        <select class="form-select" th:field="${activity.location}" id="location">
+                                            <option value="" disabled>Select location</option>
                                             <option value="Onsite">Onsite</option>
                                             <option value="Online">Online</option>
                                         </select>
@@ -78,11 +79,11 @@
                                         <div class="d-flex align-items-center gap-2">
                                             <div class="flex-fill">
                                                 <label for="timeStart" class="visually-hidden">Start Time</label>
-                                                <input type="time" class="form-control" id="timeStart" placeholder="Start">
+                                                <input type="time" class="form-control" th:field="${activity.timeStart}" id="timeStart" placeholder="Start">
                                             </div>
                                             <div class="flex-fill">
                                                 <label for="timeEnd" class="visually-hidden">End Time</label>
-                                                <input type="time" class="form-control" id="timeEnd" placeholder="End">
+                                                <input type="time" class="form-control" th:field="${activity.timeEnd}" id="timeEnd" placeholder="End">
                                             </div>
                                         </div>
                                         <div id="timeError" class="invalid-feedback"></div>
@@ -90,13 +91,13 @@
 
                                     <div class="col-md-3 mb-3">
                                         <label for="activityDate" class="form-label">Date<span class="text-danger">*</span></label>
-                                        <input type="date" class="form-control" id="activityDate">
+                                        <input type="date" class="form-control" th:field="${activity.activityDate}" id="activityDate">
                                         <div id="activityDateError" class="invalid-feedback"></div>
                                     </div>
 
                                     <div class="col-md-3 mb-3">
                                         <label for="registrationDeadline" class="form-label">Registration Deadline<span class="text-danger">*</span></label>
-                                        <input type="datetime-local" class="form-control" id="registrationDeadline">
+                                        <input type="datetime-local" class="form-control" th:field="${activity.registrationDeadline}">
                                         <div id="registrationDeadlineError" class="invalid-feedback"></div>
                                     </div>
                                 </div>
@@ -104,16 +105,16 @@
                                 <div class="mb-3">
                                     <label class="form-label">Activity Details<span class="text-danger">*</span></label>
                                     <div id="activityEditor" style="height: 400px;"></div>
-                                    <input type="hidden" id="activityDetails">
+                                    <input type="hidden" th:field="${activity.details}" id="activityDetails">
                                     <div id="activityEditorError" class="invalid-feedback"></div>
                                 </div>
 
                                 <div class="d-flex justify-content-end gap-2 mt-4">
-                                    <button type="submit" id="btnSaveDraft" class="btn btn-outline-secondary">
+                                    <button type="submit" th:if="${canEdit}" id="btnSaveDraft" class="btn btn-outline-secondary">
                                         <i class="bi bi-save me-2"></i> Save as Draft
                                     </button>
 
-                                    <button type="submit" id="btnPublish" class="btn btn-purple">
+                                    <button type="submit" th:if="${canEdit}" id="btnPublish" class="btn btn-purple">
                                         <i class="bi bi-check-circle me-2"></i> Publish
                                     </button>
                                 </div>
@@ -128,6 +129,10 @@
     <th:block layout:fragment="scripts">
         <script>
             const activityEditor = new Quill("#activityEditor", quillConfig);
+            const initialContent = $("#activityDetails").val();
+            if (initialContent) {
+                activityEditor.root.innerHTML = initialContent;
+            }
 
             function setInvalid(id, message) {
                 $(`#${id}`).addClass("is-invalid");
@@ -386,11 +391,12 @@
                 const isValid = isDraft ? validateDraft() : validatePublish();
                 if (!isValid) return;
 
+                const id = $("#id").val();
                 const data = buildPayload(isDraft);
 
                 $.ajax({
-                    url: "/contributor/activities/create",
-                    method: "POST",
+                    url: `/contributor/activities/${id}`,
+                    method: "PUT",
                     contentType: "application/json",
                     data: JSON.stringify(data),
                     success: function () {

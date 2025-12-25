@@ -1,11 +1,11 @@
 package com.binewsian.service.impl;
 
 import com.binewsian.constant.AppConstant;
-import com.binewsian.dto.CreateActivityRequest;
+import com.binewsian.dto.ActivityRequest;
 import com.binewsian.enums.ActivityStatus;
-import com.binewsian.enums.ActivityType;
 import com.binewsian.exception.BiNewsianException;
 import com.binewsian.model.Activity;
+import com.binewsian.model.User;
 import com.binewsian.repository.ActivityRepository;
 import com.binewsian.service.ActivityService;
 import lombok.RequiredArgsConstructor;
@@ -28,10 +28,13 @@ public class ActivityServiceImpl implements ActivityService {
     private final ActivityRepository activityRepository;
 
     @Override
-    public void create(CreateActivityRequest request) throws BiNewsianException {
+    public void create(ActivityRequest request, User user) throws BiNewsianException {
         boolean isDraft = request.isDraft();
-        if (!isDraft) {
-            validate(request);
+
+        if (isDraft) {
+            validateDraft(request);
+        } else {
+            validatePublish(request);
         }
 
         Activity activity = new Activity();
@@ -48,6 +51,45 @@ public class ActivityServiceImpl implements ActivityService {
         activity.setDetails(request.details());
         activity.setStatus(isDraft ? ActivityStatus.DRAFT : ActivityStatus.PUBLISHED);
         activity.setPublishedAt(isDraft ? null : LocalDateTime.now());
+        activity.setCreatedBy(user);
+
+        activityRepository.save(activity);
+    }
+
+    @Override
+    public void update(Long id, ActivityRequest request, User user) throws BiNewsianException {
+        Activity activity = activityRepository.findById(id).orElseThrow(() -> new BiNewsianException(AppConstant.ACTIVITY_NOT_FOUND));
+
+        if (!activity.getCreatedBy().getId().equals(user.getId())) {
+            throw new BiNewsianException("You are not authorized to edit this activity.");
+        }
+
+        if (activity.getStatus() == ActivityStatus.PUBLISHED) {
+            throw new BiNewsianException("Published activity cannot be edited.");
+        }
+
+        boolean isDraft = request.isDraft();
+
+        if (isDraft) {
+            validateDraft(request);
+        } else {
+            validatePublish(request);
+        }
+
+        activity.setTitle(request.title());
+        activity.setType(request.activityType());
+        activity.setQuota(request.quota());
+        activity.setRewardAmount(request.rewardAmount());
+        activity.setRegistrationLink(request.registrationLink());
+        activity.setLocation(request.location());
+        activity.setTimeStart(request.timeStart());
+        activity.setTimeEnd(request.timeEnd());
+        activity.setActivityDate(request.activityDate());
+        activity.setRegistrationDeadline(request.registrationDeadline());
+        activity.setDetails(request.details());
+        activity.setStatus(isDraft ? ActivityStatus.DRAFT : ActivityStatus.PUBLISHED);
+        activity.setPublishedAt(isDraft ? null : LocalDateTime.now());
+        activity.setCreatedBy(user);
 
         activityRepository.save(activity);
     }
@@ -59,9 +101,20 @@ public class ActivityServiceImpl implements ActivityService {
     }
 
     @Override
+    public Activity findById(Long id) throws BiNewsianException {
+        return activityRepository.findById(id).orElseThrow(() -> new BiNewsianException(AppConstant.ACTIVITY_NOT_FOUND));
+    }
+
+    @Override
     public Page<Activity> findPaginated(int page, int size) {
         Pageable pageable = PageRequest.of(page, size, Sort.by("createdAt").descending());
         return activityRepository.findByStatus(ActivityStatus.PUBLISHED, pageable);
+    }
+
+    @Override
+    public Page<Activity> findPaginatedByUserId(int page, int size, long userId) {
+        Pageable pageable = PageRequest.of(page, size, Sort.by("createdAt").descending());
+        return activityRepository.findByCreatedBy_Id(userId, pageable);
     }
 
     private String normalizeUrl(String url) {
@@ -75,7 +128,41 @@ public class ActivityServiceImpl implements ActivityService {
         return url;
     }
 
-    private void validate(CreateActivityRequest r) throws BiNewsianException {
+    private void validateDraft(ActivityRequest r) throws BiNewsianException {
+        validateBaseDateTime(r);
+    }
+
+    private void validateBaseDateTime(ActivityRequest r) throws BiNewsianException {
+        if (r.activityDate() == null && r.timeStart() == null && r.timeEnd() == null && r.registrationDeadline() == null) {
+            return;
+        }
+
+        if (r.timeStart() != null && r.timeEnd() != null && !r.timeEnd().isAfter(r.timeStart()))
+            throw new BiNewsianException("End time must be after start time");
+
+        LocalDateTime activityStartDateTime = r.activityDate().atTime(r.timeStart());
+
+        if (r.registrationDeadline() != null && !r.registrationDeadline().isBefore(activityStartDateTime))
+            throw new BiNewsianException("Registration deadline must be before activity start time");
+
+        if (r.activityDate() != null && r.activityDate().isBefore(LocalDate.now()))
+            throw new BiNewsianException("Activity date cannot be in the past");
+    }
+
+    private void validatePublishDateTime(ActivityRequest r) throws BiNewsianException {
+        if (r.activityDate() == null)
+            throw new BiNewsianException("Activity date is required");
+
+        if (r.timeStart() == null || r.timeEnd() == null)
+            throw new BiNewsianException("Start time and end time are required");
+
+        if (r.registrationDeadline() == null)
+            throw new BiNewsianException("Registration deadline is required");
+        
+        validateBaseDateTime(r);
+    }
+
+    private void validatePublish(ActivityRequest r) throws BiNewsianException {
         if (r.title() == null || r.title().isBlank())
             throw new BiNewsianException("Title is required");
 
@@ -93,26 +180,8 @@ public class ActivityServiceImpl implements ActivityService {
 
         if (r.rewardAmount() == null || r.rewardAmount() <= 0)
             throw new BiNewsianException("Reward amount must be greater than 0");
-
-        if (r.activityDate() == null)
-            throw new BiNewsianException("Activity date is required");
-
-        if (r.timeStart() == null || r.timeEnd() == null)
-            throw new BiNewsianException("Start time and end time are required");
-
-        if (r.registrationDeadline() == null)
-            throw new BiNewsianException("Registration deadline is required");
-
-        if (!r.timeEnd().isAfter(r.timeStart()))
-            throw new BiNewsianException("End time must be after start time");
-
-        LocalDateTime activityStartDateTime = r.activityDate().atTime(r.timeStart());
-
-        if (!r.registrationDeadline().isBefore(activityStartDateTime))
-            throw new BiNewsianException("Registration deadline must be before activity start time");
-
-        if (r.activityDate().isBefore(LocalDate.now()))
-            throw new BiNewsianException("Activity date cannot be in the past");
+        
+        validatePublishDateTime(r);
 
         if (r.registrationLink() == null || r.registrationLink().isBlank())
             throw new BiNewsianException("Registration link is required");
