@@ -75,7 +75,7 @@
                             <!-- Search -->
                             <div class="search-wrap mb-3 d-flex align-items-center gap-2">
                                 <i class="bi bi-search text-muted"></i>
-                                <input id="searchNews" type="text" class="form-control" placeholder="Search News">
+                                <input id="searchNews" data-list="#newsList" data-empty="#noNews" type="text" class="form-control" placeholder="Search News">
                             </div>
 
                             <!-- News List -->
@@ -163,7 +163,7 @@
                             <!-- Search -->
                             <div class="search-wrap mb-3 d-flex align-items-center gap-2">
                                 <i class="bi bi-search text-muted"></i>
-                                <input id="searchActivity" type="text" class="form-control" placeholder="Search Activity" aria-label="Search Activity">
+                                <input id="searchActivity" data-list="#activityList" data-empty="#noActivities" type="text" class="form-control" placeholder="Search Activity" aria-label="Search Activity">
                             </div>
 
                             <!-- Activity List -->
@@ -231,7 +231,7 @@
                             <!-- Search -->
                             <div class="search-wrap mb-3 d-flex align-items-center gap-2">
                                 <i class="bi bi-search text-muted"></i>
-                                <input id="searchCategory" type="text" class="form-control" placeholder="Search Category">
+                                <input id="searchCategory" data-list="#categoryList" data-empty="#noCategories" type="text" class="form-control" placeholder="Search Category">
                             </div>
 
                             <!-- Category List -->
@@ -273,7 +273,7 @@
                                 No categories yet.
                             </div>
 
-                            <div id="noCategory" style="display:none;" class="text-muted text-center">
+                            <div id="noCategories" style="display:none;" class="text-muted text-center">
                                 No matching categories.
                             </div>
 
@@ -304,7 +304,7 @@
                             <!-- Search -->
                             <div class="search-wrap mb-3 d-flex align-items-center gap-2">
                                 <i class="bi bi-search text-muted"></i>
-                                <input id="searchContributor" type="text" class="form-control" placeholder="Search Contributor">
+                                <input id="searchContributor" data-list="#contributorList" data-empty="#noContributors" type="text" class="form-control" placeholder="Search Contributor">
                             </div>
 
                             <!-- Category List -->
@@ -344,7 +344,7 @@
                                 No contributors yet.
                             </div>
 
-                            <div id="noContributor" style="display:none;" class="text-muted text-center">
+                            <div id="noContributors" style="display:none;" class="text-muted text-center">
                                 No matching contributors.
                             </div>
 
@@ -456,64 +456,21 @@
 
     <th:block layout:fragment="scripts">
         <script>
-            $("#searchCategory").on("input", function () {
+            $("[id^='search']").on("input", function () {
                 const q = $(this).val().toLowerCase();
+                const list = $(this).data("list");
+                const empty = $(this).data("empty");
                 let matches = 0;
 
-                $("#categoryList .news-item").each(function () {
-                    const name = $(this).data("name").toLowerCase();
+                $(list + " .news-item").each(function () {
+                    const name = ($(this).data("name") || "").toLowerCase();
                     const isMatch = name.includes(q);
 
                     $(this).toggle(isMatch);
                     if (isMatch) matches++;
-                });
+                })
 
-                $("#noCategory").toggle(matches === 0 && q.length > 0);
-            })
-
-            $("#searchNews").on("input", function () {
-                const q = $(this).val().toLowerCase();
-                let matches = 0;
-
-                $("#newsList .news-item").each(function () {
-                    const name = $(this).data("name").toLowerCase();
-                    const isMatch = name.includes(q);
-
-                    $(this).toggle(isMatch);
-                    if (isMatch) matches++;
-                });
-
-                $("#noNews").toggle(matches === 0 && q.length > 0);
-            })
-
-            $("#searchActivity").on("input", function () {
-                const q = $(this).val().toLowerCase();
-                let matches = 0;
-
-                $("#activityList .news-item").each(function () {
-                    const name = $(this).data("name").toLowerCase();
-                    const isMatch = name.includes(q);
-
-                    $(this).toggle(isMatch);
-                    if (isMatch) matches++;
-                });
-
-                $("#noActivities").toggle(matches === 0 && q.length > 0);
-            })
-
-            $("#searchContributor").on("input", function () {
-                const q = $(this).val().toLowerCase();
-                let matches = 0;
-
-                $("#contributorList .news-item").each(function () {
-                    const name = $(this).data("name").toLowerCase();
-                    const isMatch = name.includes(q);
-
-                    $(this).toggle(isMatch);
-                    if (isMatch) matches++;
-                });
-
-                $("#noContributor").toggle(matches === 0 && q.length > 0);
+                $(empty).toggle(matches === 0 && q.length > 0);
             })
 
             $("#categoryName").on("input", function () {
