@@ -8,5 +8,7 @@ public class AppConstant {
 
     public final static String ACTIVITY_NOT_FOUND = "Activity not found.";
 
+    public final static String INVALID_ERROR_PASSWORD_RESET_LINK = "Invalid or expired password reset link.";
+
     public final static String UNEXPECTED_SERVER_ERROR = "Unexpected server error.";
 }
