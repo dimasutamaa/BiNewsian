@@ -30,7 +30,7 @@ public class PasswordResetSvcImpl implements PasswordResetService {
     @Override
     @Transactional
     public void createPasswordResetTokenForUser(String email, String appUrl) throws BiNewsianException {
-        User user = userRepository.findByEmail(email).orElseThrow(() -> new BiNewsianException("User not found with email: " + email));
+        User user = userRepository.findByEmail(email.toLowerCase()).orElseThrow(() -> new BiNewsianException("User not found with email: " + email));
 
         tokenRepository.findByUser(user).ifPresent(tokenRepository::delete);
 
