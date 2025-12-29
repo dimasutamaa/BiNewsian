@@ -225,10 +225,17 @@
             }
 
             function validateDraft() {
+                const summary = $("#summary").val();
+                if (summary && summary.length > 500) {
+                    setInvalid("summary", "Summary cannot exceed 500 characters");
+                    isValid = false;
+                }
+
                 const file = fileInput.files[0];
                 if (file) {
-                    return validateFile(file);
+                    isValid = validateFile(file);
                 }
+
                 return true;
             }
 
