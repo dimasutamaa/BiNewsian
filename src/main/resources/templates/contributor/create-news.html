@@ -111,11 +111,12 @@
         <script>
             const MAX_FILE_SIZE = 5 * 1024 * 1024;
             const articleEditor = new Quill("#articleEditor", quillConfig);
-            const fileInput = $("#featuredImage").get(0);
+
+            const $featuredImage = $("#featuredImage");
 
             const $previewContainer = $("#previewContainer");
             const $previewThumbnail = $("#previewThumbnail");
-            const $previewFileName = $("#previewTpreviewFileNamehumbnail");
+            const $previewFileName = $("#previewFileName");
             const $previewFileSize = $("#previewFileSize");
 
             const $previewModal = $("#previewModal");
@@ -123,7 +124,30 @@
 
             let imageUrl = null;
 
-            $("#featuredImage").on("change", function () {
+            $("#btnPreviewImage").on("click", function () {
+                const currentSrc = $previewThumbnail.attr("src");
+
+                if (currentSrc) {
+                    $previewImage.attr("src", currentSrc);
+                    $previewModal.modal("show");
+                }
+            });
+            
+            $("#btnRemoveImage").on("click", function () {
+                if (imageUrl) {
+                    URL.revokeObjectURL(imageUrl);
+                }
+
+                imageUrl = null;
+                $featuredImage.val("");
+
+                $previewThumbnail.attr("src", "");
+                $previewFileName.text("");
+                $previewFileSize.text("")
+                $previewContainer.addClass("d-none");
+            });
+            
+            $featuredImage.on("change", function () {
                 const file = this.files[0];
                 if (file) {
                     const isValid = validateFile(file);
@@ -141,26 +165,6 @@
                     $previewFileName.text(file.name);
                     $previewFileSize.text(`${fileSize}MB`);
                     $previewContainer.removeClass("d-none");
-                }
-            });
-
-            $("#btnRemoveImage").on("click", function () {
-                const file = fileInput.files[0];
-                if (file) {
-                    URL.revokeObjectURL(imageUrl);
-                }
-
-                fileInput.value = "";
-                $previewThumbnail.attr("src", "");
-                $previewContainer.addClass("d-none");
-            });
-
-            $("#btnPreviewImage").on("click", function () {
-                const currentSrc = $previewThumbnail.attr("src");
-
-                if (currentSrc) {
-                    $previewImage.attr("src", currentSrc);
-                    $previewModal.modal("show");
                 }
             });
 
@@ -194,17 +198,15 @@
             }
 
             function validateFile(file) {
-                let isValid = true;
-
                 if (!file.type.startsWith("image/")) {
                     setInvalid("featuredImage", "Allowed formats: JPG, PNG, WebP");
-                    isValid = false;
+                    return false;
                 } else if (file.size > MAX_FILE_SIZE) {
                     setInvalid("featuredImage", "Image size must be less than 5MB");
-                    isValid = false;
+                    return false;
                 }
 
-                return isValid;
+                return true;
             }
 
             function validatePublish() {
@@ -234,36 +236,27 @@
                     isValid = false;
                 }
 
-                const file = fileInput.files[0];
+                const file = $featuredImage.get(0).files[0];
                 if (!file) {
                     setInvalid("featuredImage", "Featured image is required");
                     isValid = false;
-                } else {
-                    if (!file.type.startsWith("image")) {
-                        setInvalid("featuredImage", "Allowed formats: JPG, PNG, WebP");
-                        isValid = false;
-                    } else if (file.size > MAX_FILE_SIZE) {
-                        setInvalid("featuredImage", "Image size must be less than 5MB");
-                        isValid = false;
-                    }
-                }
+                } 
 
-                return isValid && validateFile(file);
+                return isValid && file && validateFile(file);
             }
 
             function validateDraft() {
+                let isValid = true;
+
                 const summary = $("#summary").val();
-                if (summary && summary.length > 500) {
-                    setInvalid("summary", "Summary cannot exceed 500 characters");
+                if (summary && summary.length > 200) {
+                    setInvalid("summary", "Summary cannot exceed 200 characters");
                     isValid = false;
                 }
 
-                const file = fileInput.files[0];
-                if (file) {
-                    isValid = validateFile(file);
-                }
+                const file = $featuredImage.get(0).files[0];
 
-                return true;
+                return isValid && (file ? validateFile(file) : true);
             }
 
             function emptyToNull(value) {
@@ -286,7 +279,7 @@
                 const formData = new FormData();
                 formData.append("data", new Blob([JSON.stringify(data)], { type: "application/json" }))
 
-                const file = fileInput.files[0];
+                const file = $featuredImage.get(0).files[0];
                 if (file) {
                     formData.append("featuredImage", file)
                 }
