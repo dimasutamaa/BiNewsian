@@ -44,17 +44,25 @@
                                     </div>
 
                                     <div class="col-md-8 mb-3">
-                                        <label for="featuredImage" class="form-label">Featured Image (5MB)</label>
-                                        <div class="input-group">
-                                            <input class="form-control" type="file" id="featuredImage" accept="image/png,image/jpeg,image/jpg,image/webp">
-                                            <button class="btn btn-outline-primary d-none" type="button" id="btnPreview">
-                                                <i class="bi bi-eye"></i> Preview
-                                            </button>
-                                            <button class="btn btn-outline-danger d-none" type="button" id="btnDelete">
-                                                <i class="bi bi-trash"></i> Delete
-                                            </button>
-                                        </div>
+                                        <label for="featuredImage" class="form-label">Featured Image (5MB)<span class="text-danger">*</span></label>
+                                        <input class="form-control" type="file" id="featuredImage" accept="image/png,image/jpeg,image/jpg,image/webp">
                                         <div id="featuredImageError" class="invalid-feedback"></div>
+
+                                        <!-- Image Preview Container -->
+                                        <div id="previewContainer" class="mt-3 d-none" style="max-width: 400px;">
+                                            <div id="btnPreviewImage" style="cursor: pointer;" class="border rounded p-2 d-flex align-items-center justify-content-between bg-light">
+                                                <div class="d-flex align-items-center gap-3">
+                                                    <img id="previewThumbnail" src="" alt="Preview" style="width: 48px; height: 48px; object-fit: cover;">
+                                                    <div>
+                                                        <div class="fw-medium" id="previewFileName" style="font-size: 14px;"></div>
+                                                        <small class="text-muted" id="previewFileSize"></small>
+                                                    </div>
+                                                </div>
+                                                <button type="button" class="btn btn-link p-0 btn-delete-custom" id="btnRemoveImage">
+                                                    <i class="bi bi-trash"></i>
+                                                </button>
+                                            </div>
+                                        </div>
                                     </div>
                                 </div>
 
@@ -88,11 +96,11 @@
         </div>
 
         <!-- Image Preview Modal -->
-        <div class="modal fade" id="imagePreviewModal" tabindex="-1">
+        <div class="modal fade" id="previewModal" tabindex="-1">
             <div class="modal-dialog modal-dialog-centered modal-lg">
                 <div class="modal-content">
                     <div class="modal-body text-center">
-                        <img id="imagePreview" src="" alt="Image Preview" class="img-fluid">
+                        <img id="previewImage" src="" alt="Image Preview" class="img-fluid">
                     </div>
                 </div>
             </div>
@@ -104,6 +112,15 @@
             const MAX_FILE_SIZE = 5 * 1024 * 1024;
             const articleEditor = new Quill("#articleEditor", quillConfig);
             const fileInput = $("#featuredImage").get(0);
+
+            const $previewContainer = $("#previewContainer");
+            const $previewThumbnail = $("#previewThumbnail");
+            const $previewFileName = $("#previewTpreviewFileNamehumbnail");
+            const $previewFileSize = $("#previewFileSize");
+
+            const $previewModal = $("#previewModal");
+            const $previewImage = $("#previewImage");
+
             let imageUrl = null;
 
             $("#featuredImage").on("change", function () {
@@ -118,26 +135,33 @@
                     clearInvalid("featuredImage");
 
                     imageUrl = URL.createObjectURL(file);
-                    $("#imagePreview").attr("src", imageUrl);
-                    $("#btnPreview").removeClass("d-none");
-                    $("#btnDelete").removeClass("d-none");
+                    const fileSize = (file.size / (1024 * 1024)).toFixed(2);
+
+                    $previewThumbnail.attr("src", imageUrl);
+                    $previewFileName.text(file.name);
+                    $previewFileSize.text(`${fileSize}MB`);
+                    $previewContainer.removeClass("d-none");
                 }
             });
 
-            $("#btnPreview").on("click", function () {
-                $("#imagePreviewModal").modal("show");
-            });
-
-            $("#btnDelete").on("click", function () {
+            $("#btnRemoveImage").on("click", function () {
                 const file = fileInput.files[0];
                 if (file) {
                     URL.revokeObjectURL(imageUrl);
                 }
 
                 fileInput.value = "";
-                $("#imagePreview").attr("src", "");
-                $(this).addClass("d-none");
-                $("#btnPreview").addClass("d-none");
+                $previewThumbnail.attr("src", "");
+                $previewContainer.addClass("d-none");
+            });
+
+            $("#btnPreviewImage").on("click", function () {
+                const currentSrc = $previewThumbnail.attr("src");
+
+                if (currentSrc) {
+                    $previewImage.attr("src", currentSrc);
+                    $previewModal.modal("show");
+                }
             });
 
             function setInvalid(id, message) {
@@ -150,14 +174,17 @@
                 $(`#${id}Error`).text("");
             }
 
+            const $articleEditor = $("#articleEditor");
+            const $articleEditorError = $("#articleEditorError");
+
             function setInvalidEditor(message) {
-                $("#articleEditor").addClass("is-invalid form-control").css("border", "1px solid #dc3545");
-                $("#articleEditorError").text(message).addClass("d-block");
+                $articleEditor.addClass("is-invalid form-control").css("border", "1px solid #dc3545");
+                $articleEditorError.text(message).addClass("d-block");
             }
 
             function clearInvalidEditor() {
-                $("#articleEditor").removeClass("is-invalid form-control").css("border", "");
-                $("#articleEditorError").text("").removeClass("d-block");
+                $articleEditor.removeClass("is-invalid form-control").css("border", "");
+                $articleEditorError.text("").removeClass("d-block");
             }
 
             function clearValidation() {
@@ -343,33 +370,27 @@
                 border-color: #dc3545 !important;
             }
 
-            #btnPreview, #btnDelete {
-                height: 38px;
-                padding: 6px 12px;
-                font-size: 14px;
-                border: 1px solid #ced4da;
-                background-color: #f8f9fa;
-                color: #000;
-                cursor: pointer;
-                transition: all 0.15s ease-in-out;
+            .btn-delete-custom {
+                color: #dc3545; 
+                text-decoration: none;
+                width: 36px;
+                height: 36px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                transition: all 0.2s ease; /* Transisi halus */
             }
 
-            #btnPreview:hover {
-                background-color: #e9ecef;
-                border-color: #adb5bd;
+            .btn-delete-custom:hover {
+                color: #a71d2a; 
+                background-color: rgba(220, 53, 69, 0.1); 
             }
 
-            #btnDelete {
-                color: #000;
-                background-color: #f8f9fa;
+            .btn-delete-custom:active {
+                background-color: rgba(220, 53, 69, 0.2); 
             }
 
-            #btnDelete:hover {
-                background-color: #dc3545;
-                color: #fff;
-            }
-
-            #featuredImage:has(~ #btnPreview.d-none):has(~ #btnDelete.d-none) {
+            #featuredImage:has(~ #btnPreviewImage.d-none):has(~ #btnDelete.d-none) {
                 border-top-right-radius: 0.375rem !important;
                 border-bottom-right-radius: 0.375rem !important;
             }
@@ -386,10 +407,6 @@
                 
                 #featuredImage {
                     flex: 1 1 100% !important;
-                }
-                
-                #btnPreview, #btnDelete {
-                    flex: 1;
                 }
             }
         </style>
