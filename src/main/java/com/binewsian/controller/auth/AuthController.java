@@ -1,5 +1,6 @@
 package com.binewsian.controller.auth;
 
+import com.binewsian.constant.AppConstant;
 import com.binewsian.exception.BiNewsianException;
 import com.binewsian.model.User;
 import com.binewsian.service.AuthService;
@@ -50,28 +51,28 @@ public class AuthController {
 
         if (error != null) {
             if ("unauthorized".equals(error)) {
-                model.addAttribute("error", "Silakan login terlebih dahulu!");
+                model.addAttribute("error", "Please log in first!");
             } else {
-                model.addAttribute("error", "Username atau password salah!");
+                model.addAttribute("error", AppConstant.INCORRECT_EMAIL_PASSWORD);
             }
         }
         if (logout != null) {
-            model.addAttribute("message", "Anda berhasil logout");
+            model.addAttribute("message", "You have successfully logged out.");
         }
 
         return "login";
     }
 
     @PostMapping("/login")
-    public String login(@RequestParam String username, @RequestParam String password,
+    public String login(@RequestParam String email, @RequestParam String password,
                         @RequestParam(required = false) String rememberMe, HttpSession session,
                         HttpServletResponse response, Model model) {
 
-        User user = authService.authenticate(username, password);
+        User user = authService.authenticate(email, password);
 
         if (user == null) {
-            model.addAttribute("error", "Username atau password salah!");
-            model.addAttribute("username", username);
+            model.addAttribute("error", AppConstant.INCORRECT_EMAIL_PASSWORD);
+            model.addAttribute("email", email);
             return "login";
         }
 
@@ -81,7 +82,7 @@ public class AuthController {
 
         // Handle Remember Me
         if ("on".equals(rememberMe)) {
-            String token = rememberMeSvc.createToken(username);
+            String token = rememberMeSvc.createToken(email.toLowerCase());
             Cookie cookie = new Cookie("remember_token", token);
             cookie.setMaxAge(7 * 24 * 60 * 60); // 7 days
             cookie.setPath("/");
@@ -114,7 +115,7 @@ public class AuthController {
                            @RequestParam String confirmPassword, @RequestParam String email, Model model) {
 
         if (!password.equals(confirmPassword)) {
-            model.addAttribute("error", "Password tidak cocok!");
+            model.addAttribute("error", "Password does not match!");
             model.addAttribute("username", username);
             model.addAttribute("email", email);
             return "register";
@@ -122,7 +123,7 @@ public class AuthController {
 
         try {
             authService.register(username, password, email);
-            model.addAttribute("success", "Registrasi berhasil! Silakan login.");
+            model.addAttribute("success", "Registration successful!");
             return "login";
         } catch (BiNewsianException e) {
             model.addAttribute("error", e.getMessage());
@@ -142,7 +143,7 @@ public class AuthController {
 
         // Delete remember me token
         if (user != null) {
-            rememberMeSvc.deleteTokenByUsername(user.getUsername());
+            rememberMeSvc.deleteTokenByEmail(user.getEmail());
         }
 
         // Delete cookie

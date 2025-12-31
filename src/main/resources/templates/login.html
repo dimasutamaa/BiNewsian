@@ -32,8 +32,8 @@
             <!-- Login Form -->
             <form th:action="@{/login}" method="post">
                 <div class="mb-3">
-                    <label for="username" class="form-label">Username</label>
-                    <input type="text" class="form-control" id="username" name="username" required autofocus th:value="${username}">
+                    <label for="email" class="form-label">Email</label>
+                    <input type="email" class="form-control" id="email" name="email" required autofocus th:value="${email}">
                 </div>
 
                 <div class="mb-3">
@@ -41,9 +41,14 @@
                     <input type="password" class="form-control" id="password" name="password" required>
                 </div>
 
-                <div class="mb-3 form-check">
-                    <input type="checkbox" class="form-check-input" id="rememberMe" name="rememberMe">
-                    <label class="form-check-label" for="rememberMe">Remember Me</label>
+                <div class="mb-3 form-check d-flex justify-content-between">
+                    <div>
+                        <input type="checkbox" class="form-check-input" id="rememberMe" name="rememberMe">
+                        <label class="form-check-label" for="rememberMe">Remember Me</label>
+                    </div>
+                    <div>
+                        <a th:href="@{/forgot-password}" class="auth-link">Forgot Password?</a>
+                    </div>
                 </div>
 
                 <button type="submit" class="btn btn-auth w-100 mb-3">
@@ -52,8 +57,8 @@
 
                 <div class="text-center">
                     <p class="mb-0">
-                        Belum punya akun?
-                        <a th:href="@{/register}" class="auth-link">Daftar di sini</a>
+                        Don't have an account?
+                        <a th:href="@{/register}" class="auth-link">Sign up here</a>
                     </p>
                 </div>
             </form>
