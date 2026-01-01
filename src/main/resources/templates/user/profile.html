@@ -36,7 +36,7 @@
                                 <div id="editProfileBtn">
                                     <div th:insert="~{fragments/profile-menu-btn :: iconButton('bi-pencil-square', 'Edit Profile')}"></div>
                                 </div>
-                                <div id="changePasswordBtn">
+                                <div id="changePasswordBtn" data-bs-toggle="modal" data-bs-target="#changePasswordModal">
                                     <div th:insert="~{fragments/profile-menu-btn :: iconButton('bi-key', 'Change Password')}"></div>
                                 </div>
                                 <a th:href="@{/logout}" style="text-decoration: none;">
@@ -90,6 +90,173 @@
                 </div>
             </div>
         </div>
+
+        <!-- Change Password Modal -->
+        <div class="modal fade" id="changePasswordModal" tabindex="-1" aria-labelledby="changePasswordModal" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h1 class="modal-title fs-5" id="changePasswordLabel">Change Password</h1>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="mb-3">
+                            <label for="oldPassword" class="form-label">Old Password</label>
+                            <input type="password" class="form-control" id="oldPassword">
+                            <div id="oldPasswordError" class="invalid-feedback"></div>
+                        </div>
+                        <div class="mb-3">
+                            <label for="newPassword" class="form-label">New Password</label>
+                            <input type="password" class="form-control" id="newPassword">
+                            <div id="newPasswordError" class="invalid-feedback"></div>
+                        </div>
+                        <div class="mb-3">
+                            <label for="confirmPassword" class="form-label">Confirm Password</label>
+                            <input type="password" class="form-control" id="confirmPassword">
+                            <div id="confirmPasswordError" class="invalid-feedback"></div>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                        <button id="btnChangePassword" class="btn btn-purple">
+                            <span class="btn-text">Change</span>
+                            <span class="spinner-border spinner-border-sm d-none" role="status" aria-hidden="true"></span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
+
+    <th:block layout:fragment="scripts">
+        <script>
+            $("#btnChangePassword").on("click", function () {
+                const $btn = $("#btnChangePassword");
+                const $btnText = $btn.find(".btn-text");
+                const $spinner = $btn.find(".spinner-border");
+
+                const oldPassword = $("#oldPassword").val();
+                const newPassword = $("#newPassword").val();
+                const confirmPassword = $("#confirmPassword").val();
+
+                let hasError = false;
+                let isNewPasswordValid = true;
+
+                if (oldPassword === "") {
+                    $("#oldPassword").addClass("is-invalid");
+                    $("#oldPasswordError").text("Old password is required");
+                    hasError = true;
+                } else if (oldPassword.length < 6) {
+                    $("#oldPassword").addClass("is-invalid");
+                    $("#oldPasswordError").text("Old password must be at least 6 characters");
+                    hasError = true;
+                }
+
+                if (newPassword === "") {
+                    $("#newPassword").addClass("is-invalid");
+                    $("#newPasswordError").text("New password is required");
+                    hasError = true;
+                    isNewPasswordValid = false;
+                } else if (newPassword.length < 6) {
+                    $("#newPassword").addClass("is-invalid");
+                    $("#newPasswordError").text("New password must be at least 6 characters");
+                    hasError = true;
+                    isNewPasswordValid = false;
+                }
+
+                if (confirmPassword === "") {
+                    $("#confirmPassword").addClass("is-invalid");
+                    $("#confirmPasswordError").text("Confirm password is required");
+                    hasError = true;
+                }
+
+                if (isNewPasswordValid && newPassword !== confirmPassword) {
+                    $("#confirmPassword").addClass("is-invalid");
+                    $("#confirmPasswordError").text("Confirm password must match new password");
+                    hasError = true;
+                }
+
+                if (hasError) return;
+
+                $btn.prop("disabled", true);
+                $btnText.text("Changing...");
+                $spinner.removeClass("d-none");
+
+                $.ajax({
+                    url: "/user/change-password",
+                    type: "POST",
+                    data: {
+                        oldPassword: oldPassword,
+                        newPassword: newPassword,
+                        confirmPassword: confirmPassword
+                    },
+                    success: function () {
+                        $("#changePasswordModal").modal("hide");
+
+                        $("#changePasswordModal").one("hidden.bs.modal", function () {
+                            Swal.fire({
+                                icon: "success",
+                                title: "Changed!",
+                                text: "Your password successfully changed!",
+                                timer: 1600,
+                                showConfirmButton: false
+                            });
+
+                            resetChangePasswordForm();
+                        });
+                    },
+                    error: function (xhr) {
+                        if (xhr.status === 400) {
+                            const message = xhr.responseText;
+
+                            $("#oldPassword, #newPassword, #confirmPassword").removeClass("is-invalid");
+                            $("#oldPasswordError, #newPasswordError, #confirmPasswordError").text("");
+
+                            if (message.includes("Old")) {
+                                $("#oldPassword").addClass("is-invalid");
+                                $("#oldPasswordError").text(message);
+                            } else if (message.includes("New")) {
+                                $("#newPassword").addClass("is-invalid");
+                                $("#newPasswordError").text(message);
+                            }
+                        } else {
+                            Swal.fire({
+                                icon: "error",
+                                title: "Failed to change password",
+                                text: xhr.responseText || "Unknown error"
+                            });
+                        }
+                    },
+                    complete: function () {
+                        $btn.prop("disabled", false);
+                        $btnText.text("Change");
+                        $spinner.addClass("d-none");
+                    }
+                })
+            })
+
+            $("#oldPassword, #newPassword, #confirmPassword").on("input", function () {
+                $(this).removeClass("is-invalid");
+
+                if (this.id === "oldPassword") $("#oldPasswordError").text("");
+                if (this.id === "newPassword") $("#newPasswordError").text("");
+                if (this.id === "confirmPassword") $("#confirmPasswordError").text("");
+            })
+
+            $("#changePasswordModal").on("hidden.bs.modal", function () {
+                resetChangePasswordForm();
+            })
+
+            function resetChangePasswordForm() {
+                $("#oldPassword").val("").removeClass("is-invalid");
+                $("#newPassword").val("").removeClass("is-invalid");
+                $("#confirmPassword").val("").removeClass("is-invalid");
+
+                $("#oldPasswordError").text("");
+                $("#newPasswordError").text("");
+                $("#confirmPasswordError").text("");
+            }
+        </script>
+    </th:block>
 </body>
 </html>

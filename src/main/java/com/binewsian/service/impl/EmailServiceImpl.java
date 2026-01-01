@@ -55,4 +55,41 @@ public class EmailServiceImpl implements EmailService {
         }
     }
 
+    @Override
+    public void sendResetPassword(String email, String token, String appUrl) throws BiNewsianException {
+        log.info("Sending reset password email to {}", email);
+
+        try {
+            String resetUrl = appUrl + "/reset-password?token=" + token;
+
+            MimeMessage message = mailSender.createMimeMessage();
+
+            MimeMessageHelper helper = new MimeMessageHelper(
+                    message,
+                    MimeMessageHelper.MULTIPART_MODE_MIXED_RELATED,
+                    "UTF-8"
+            );
+
+            Context context = new Context();
+            context.setVariable("email", email);
+            context.setVariable("resetUrl", resetUrl);
+
+            String htmlContent = templateEngine.process(
+                    "email/password-reset",
+                    context
+            );
+
+            helper.setTo(email);
+            helper.setSubject("Password Reset Request");
+            helper.setText(htmlContent, true);
+
+            mailSender.send(message);
+
+            log.info("Email successfully sent to {}", email);
+        } catch (MessagingException e) {
+            log.error("Failed to send email to {}", email, e);
+            throw new BiNewsianException("Failed to send reset password email");
+        }
+    }
+
 }
