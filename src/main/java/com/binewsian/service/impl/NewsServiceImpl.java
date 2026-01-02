@@ -124,6 +124,11 @@ public class NewsServiceImpl implements NewsService {
         return newsRepository.findByStatusOrderByPublishedAtDesc(NewsStatus.PUBLISHED);
     }
 
+    @Override
+    public List<News> findLatestPublished() {
+        return newsRepository.findTop5ByPublishedAtNotNullOrderByPublishedAtDesc();
+    }
+
     private void validateOwnerAndStatus(News news, User user) throws BiNewsianException {
         if (!news.getCreatedBy().getId().equals(user.getId())) {
             throw new BiNewsianException("You are not authorized to edit this activity.");

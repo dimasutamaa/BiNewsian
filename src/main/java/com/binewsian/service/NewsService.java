@@ -18,4 +18,5 @@ public interface NewsService {
     Page<News> findPaginated(int page, int size);
     Page<News> findPaginatedByUserId(int page, int size, long userId);
     List<News> findAllByStatus();
+    List<News> findLatestPublished();
 }
