@@ -62,7 +62,7 @@
                                                         <small id="previewFileSize" class="upload-preview__size"></small>
                                                     </div>
                                                 </div>
-                                                <button type="button" class="btn btn-link p-0 upload-preview__btn-delete" id="btnRemoveImage">
+                                                <button type="button" th:if="${canEdit}" class="btn btn-link p-0 upload-preview__btn-delete" id="btnRemoveImage">
                                                     <i class="bi bi-trash"></i>
                                                 </button>
                                             </div>
