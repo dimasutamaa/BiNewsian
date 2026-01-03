@@ -87,6 +87,17 @@ body {
     color: white;
 }
 
+.profile-menu-btn {
+    width: 100%;
+    padding: 8px 12px;
+    border-radius: 8px;
+    text-decoration: none;
+}
+
+.profile-menu-btn:hover {
+    background-color: rgba(13, 110, 253, 0.1);
+}
+
 .form-control:focus, .form-select:focus {
     border-color: #667eea;
     box-shadow: 0 0 0 0.25rem rgba(102, 126, 234, 0.25);
@@ -149,6 +160,11 @@ body {
     border:none;
     color:#374151;
     border-radius:999px;
+    margin-right: 5px;
+}
+
+.nav-tabs .nav-link:hover {
+    background:#e6e6e6;
 }
 
 .nav-tabs .nav-link.active {
@@ -719,22 +735,41 @@ body {
    DASHBOARD
    ======================================== */
 
-/* User Icon */
-.user-icon {
-    width: 40px;
-    height: 40px;
-    background: white;
+/* User Avatar */
+.user-avatar {
+    width: 60px;
+    height: 60px;
     border-radius: 50%;
     display: flex;
     align-items: center;
     justify-content: center;
-    color: var(--primary-color);
-    cursor: pointer;
-    transition: transform 0.3s ease;
+    flex-shrink: 0;
 }
 
-.user-icon:hover {
-    transform: scale(1.1);
+.user-initials {
+    color: white;
+    font-size: 24px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+.user-avatar-small {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.user-initials-small {
+    color: white;
+    font-size: 12px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
 }
 
 /* Main Container */
