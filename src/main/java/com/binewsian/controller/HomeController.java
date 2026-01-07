@@ -2,16 +2,24 @@ package com.binewsian.controller;
 
 import com.binewsian.annotation.RequireRole;
 import com.binewsian.enums.Role;
+import com.binewsian.exception.BiNewsianException;
+import com.binewsian.model.Activity;
 import com.binewsian.model.User;
+import com.binewsian.service.ActivityService;
 import jakarta.servlet.http.HttpSession;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestParam;
 
 @Controller
 @RequiredArgsConstructor
 public class HomeController {
+
+    private final ActivityService activityService;
 
     @GetMapping("/")
     public String home() {
@@ -24,6 +32,36 @@ public class HomeController {
         User user = (User) session.getAttribute("user");
         model.addAttribute("user", user);
         return "dashboard";
+    }
+
+    @GetMapping("/activity")
+    @RequireRole({Role.USER, Role.CONTRIBUTOR, Role.ADMIN})
+    public String showActivityPage(@RequestParam(defaultValue = "0") int page, @RequestParam(defaultValue = "9") int size,
+            HttpSession session, Model model) {
+
+        User user = (User) session.getAttribute("user");
+        model.addAttribute("user", user);
+
+        Page<Activity> activityPage = activityService.getPublishedActivities(page, size);
+
+        model.addAttribute("activities", activityPage.getContent());
+        model.addAttribute("currentPage", activityPage.getNumber());
+        model.addAttribute("totalPages", activityPage.getTotalPages());
+        model.addAttribute("totalActivities", activityPage.getTotalElements());
+
+        return "activity";
+    }
+
+    @GetMapping("/activity/{id}")
+    @RequireRole({Role.USER, Role.CONTRIBUTOR, Role.ADMIN})
+    public String showActivityDetail(@PathVariable Long id, HttpSession session, Model model) throws BiNewsianException {
+        User user = (User) session.getAttribute("user");
+        model.addAttribute("user", user);
+
+        Activity activity = activityService.getActivityById(id);
+        model.addAttribute("activity", activity);
+
+        return "activity-detail";
     }
 
 }

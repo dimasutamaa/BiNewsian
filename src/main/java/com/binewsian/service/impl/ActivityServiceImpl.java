@@ -123,6 +123,18 @@ public class ActivityServiceImpl implements ActivityService {
         return activityRepository.findByStatusOrderByPublishedAtDesc(ActivityStatus.PUBLISHED);
     }
 
+    @Override
+    public Page<Activity> getPublishedActivities(int page, int size) {
+        Pageable pageable = PageRequest.of(page, size, Sort.by("activityDate").descending());
+        return activityRepository.findByStatus(ActivityStatus.PUBLISHED, pageable);
+    }
+
+    @Override
+    public Activity getActivityById(Long id) throws BiNewsianException {
+        return activityRepository.findByIdAndStatus(id, ActivityStatus.PUBLISHED)
+                .orElseThrow(() -> new BiNewsianException(AppConstant.ACTIVITY_NOT_FOUND));
+    }
+
     private String normalizeUrl(String url) {
         if (url == null || url.isBlank()) return url;
 

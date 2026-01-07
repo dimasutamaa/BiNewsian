@@ -7,6 +7,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.List;
+import java.util.Optional;
 
 public interface ActivityRepository extends JpaRepository<Activity, Long> {
     int countByStatus(ActivityStatus status);
@@ -15,4 +16,5 @@ public interface ActivityRepository extends JpaRepository<Activity, Long> {
     Page<Activity> findByStatus(ActivityStatus status, Pageable pageable);
     Page<Activity> findByCreatedBy_Id(Long userId, Pageable pageable);
     List<Activity> findByStatusOrderByPublishedAtDesc(ActivityStatus status);
+    Optional<Activity> findByIdAndStatus(Long id, ActivityStatus status);
 }
