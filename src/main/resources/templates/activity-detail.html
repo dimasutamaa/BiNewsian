@@ -106,9 +106,9 @@
                     </div>
                 </div>
 
-                <button class="save-btn" id="saveActivityBtn">
-                    <i class="bi bi-bookmark"></i>
-                    Save Activity
+                <button class="save-btn" id="saveActivityBtn" th:data-id="${activity.id}" th:data-type="'ACTIVITY'">
+                    <i class="bi" th:classappend="${isBookmarked} ? 'bi-bookmark-fill' : 'bi-bookmark'"></i>
+                    <span class="save-text" th:text="${isBookmarked} ? 'Saved' : 'Save Activity'"></span>
                 </button>
             </div>
         </div>
@@ -150,27 +150,51 @@
         $(document).ready(function () {
             $('#saveActivityBtn').on('click', function () {
                 const $btn = $(this);
-                const $icon = $btn.find('i');
+                const contentId = $btn.data('id');
+                const contentType = $btn.data('type');
 
-                if ($icon.hasClass('bi-bookmark')) {
-                    $icon.removeClass('bi-bookmark')
-                         .addClass('bi-bookmark-fill');
+                $.ajax({
+                    url: '/user/bookmarks/toggle',
+                    method: 'POST',
+                    data: {
+                        contentId: contentId,
+                        type: contentType
+                    },
+                    success: function (res) {
+                        const $icon = $btn.find('i');
 
-                    $btn.css({
-                        background: '#eff6ff',
-                        color: '#3b82f6',
-                        borderColor: '#3b82f6'
-                    });
-                } else {
-                    $icon.removeClass('bi-bookmark-fill')
-                         .addClass('bi-bookmark');
+                        if (res.saved) {
+                            $icon.removeClass('bi-bookmark').addClass('bi-bookmark-fill');
+                            $btn.find('.save-text').text('Saved');
 
-                    $btn.css({
-                        background: 'white',
-                        color: '#111827',
-                        borderColor: '#d1d5db'
-                    });
-                }
+                            Swal.fire({
+                                icon: 'success',
+                                title: 'Saved',
+                                text: 'Activity added to bookmarks',
+                                timer: 1500,
+                                showConfirmButton: false
+                            })
+                        } else {
+                            $icon.removeClass('bi-bookmark-fill').addClass('bi-bookmark');
+                            $btn.find('.save-text').text('Save Activity');
+
+                            Swal.fire({
+                                icon: 'info',
+                                title: 'Removed',
+                                text: 'Bookmark removed',
+                                timer: 1500,
+                                showConfirmButton: false
+                            })
+                        }
+                    },
+                    error: function () {
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Error',
+                            text: 'Unexpected server error.'
+                        })
+                    }
+                })
             })
 
             $('#sendCommentBtn').on('click', function () {

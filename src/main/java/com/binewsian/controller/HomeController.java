@@ -8,6 +8,7 @@ import com.binewsian.exception.BiNewsianException;
 import com.binewsian.model.Activity;
 import com.binewsian.model.User;
 import com.binewsian.service.ActivityService;
+import com.binewsian.service.BookmarkService;
 import jakarta.servlet.http.HttpSession;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -28,6 +29,7 @@ import java.util.stream.Collectors;
 public class HomeController {
 
     private final ActivityService activityService;
+    private final BookmarkService bookmarkService;
 
     @GetMapping("/")
     public String home() {
@@ -98,10 +100,11 @@ public class HomeController {
     @RequireRole({Role.USER, Role.CONTRIBUTOR, Role.ADMIN})
     public String showActivityDetail(@PathVariable Long id, HttpSession session, Model model) throws BiNewsianException {
         User user = (User) session.getAttribute("user");
-        model.addAttribute("user", user);
-
         Activity activity = activityService.getActivityById(id);
+
+        model.addAttribute("user", user);
         model.addAttribute("activity", activity);
+        model.addAttribute("isBookmarked", bookmarkService.isBookmarked(user, "ACTIVITY", id));
 
         return "activity-detail";
     }
