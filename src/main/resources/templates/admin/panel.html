@@ -96,8 +96,6 @@
                                                 <h6 class="news-title mb-1" th:text="${news.title}"></h6>
 
                                                 <div class="d-flex align-items-center gap-2">
-                                                    <span class="status-pill status-published" th:text="${news.status.getDisplayName()}">-</span>
-
                                                     <div class="dropdown">
                                                         <button class="btn btn-link p-1 ellipsis-btn" type="button" data-bs-toggle="dropdown">
                                                             <i class="bi bi-three-dots-vertical"></i>
@@ -367,18 +365,25 @@
                                                     </small>
                                                 </div>
 
-<!--                                                <div class="dropdown">-->
-<!--                                                    <button class="btn btn-link p-1 ellipsis-btn" data-bs-toggle="dropdown">-->
-<!--                                                        <i class="bi bi-three-dots-vertical"></i>-->
-<!--                                                    </button>-->
-<!--                                                    <ul class="dropdown-menu dropdown-menu-end">-->
-<!--                                                        <li>-->
-<!--                                                            <button class="dropdown-item text-danger action-delete" th:data-id="${contributor.id}" th:data-type="contributor">-->
-<!--                                                                <i class="bi bi-trash me-2"></i> Delete-->
-<!--                                                            </button>-->
-<!--                                                        </li>-->
-<!--                                                    </ul>-->
-<!--                                                </div>-->
+                                                <div class="dropdown">
+                                                    <span class="status-pill status-published" th:if="${contributor.enabled}">Active</span>
+                                                    <span class="status-pill status-draft" th:if="${!contributor.enabled}">Deactivated</span>
+                                                    <button class="btn btn-link p-1 ellipsis-btn" data-bs-toggle="dropdown">
+                                                        <i class="bi bi-three-dots-vertical"></i>
+                                                    </button>
+                                                    <ul class="dropdown-menu dropdown-menu-end">
+                                                        <li th:if="${contributor.enabled}">
+                                                            <button class="dropdown-item text-danger action-enable" th:data-id="${contributor.id}" th:data-status="deactivate">
+                                                                <i class="bi bi-slash-circle me-2"></i> Deactivate
+                                                            </button>
+                                                        </li>
+                                                        <li th:if="${!contributor.enabled}">
+                                                            <button class="dropdown-item text-dark action-enable" th:data-id="${contributor.id}" th:data-status="activate">
+                                                                <i class="bi bi-check-circle me-2"></i> Activate
+                                                            </button>
+                                                        </li>
+                                                    </ul>
+                                                </div>
                                             </div>
                                         </div>
                                     </div>
@@ -973,6 +978,57 @@
                             Swal.fire({
                                 icon: "error",
                                 title: "Delete failed",
+                                text: message,
+                            }).then((result) => {
+                                if (result.isConfirmed) {
+                                    location.reload();
+                                }
+                            });
+                        }
+                    })
+                })
+            })
+
+            $(document).on("click", ".action-enable", function () {
+                const id = $(this).data("id");
+                const status = $(this).data("status");
+
+                Swal.fire({
+                    title: capitalizeFirstLetter(status) + " this contributor?",
+                    text: "This action cannot be undone.",
+                    icon: "warning",
+                    showCancelButton: true,
+                    confirmButtonText: "Yes",
+                    cancelButtonText: "Cancel"
+                }).then(result => {
+                    if (!result.isConfirmed) return;
+
+                    $.ajax({
+                        url: "/admin/contributors/update",
+                        method: "POST",
+                        data: { id: id },
+
+                        success: function () {
+                            Swal.fire({
+                                icon: "success",
+                                title: "Success!",
+                                text: "Contributor account has been " + status + "d.",
+                                timer: 1600,
+                                showConfirmButton: false
+                            }).then(() => location.reload());
+                        },
+                        error: function (xhr) {
+                            let message = "Unexpected server error.";
+
+                            if (xhr.status === 400 && xhr.responseText) {
+                                message = xhr.responseText;
+                            } else if (xhr.status === 500) {
+                                message = xhr.responseText || "Unexpected server error.";
+                            }
+
+                            Swal.fire({
+                                icon: "error",
+                                title: "Update failed",
                                 text: message,
                             }).then((result) => {
                                 if (result.isConfirmed) {
