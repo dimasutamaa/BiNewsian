@@ -53,4 +53,22 @@ public class CommentController {
 
         return ResponseEntity.ok(response);
     }
+
+    @GetMapping("/comments/{id}/replies")
+    @ResponseBody
+    public ResponseEntity<?> getReplies(
+            @PathVariable Long id,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "5") int size
+    ) {
+        Page<Comment> comments = commentService.findReplies(page, size, id);
+
+        Map<String, Object> response = new HashMap<>();
+        response.put("replies", comments.getContent());
+        response.put("currentPage", comments.getNumber());
+        response.put("totalItems", comments.getTotalElements());
+        response.put("totalPages", comments.getTotalPages());
+
+        return ResponseEntity.ok(response);
+    }
 }

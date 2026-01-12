@@ -11,4 +11,5 @@ public interface CommentService {
     void update(Long id, User user) throws BiNewsianException;
     void delete(Long id) throws BiNewsianException;
     Page<Comment> findPaginated(int page, int size, Long contentId, String contentType);
+    Page<Comment> findReplies(int page, int size, Long commentId);
 }

@@ -25,9 +25,6 @@ public class Comment {
     @JoinColumn(name = "parent_id")
     private Comment parent;
 
-    @OneToMany(mappedBy = "parent")
-    private List<Comment> replies;
-
     @Formula("(SELECT COUNT(*) FROM comments r WHERE r.parent_id = id)")
     private int replyCount;
 

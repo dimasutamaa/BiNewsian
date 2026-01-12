@@ -128,13 +128,29 @@
                 });
             }
 
+            // Create reply HTML
+            function createReplyHtml(reply) {
+                const avatar = reply.user.username.charAt(0).toUpperCase();
+                const date = formatDate(reply.createdAt);
+                
+                return `
+                    <div class="reply-item">
+                        <div class="reply-avatar">${avatar}</div>
+                        <div class="comment-content">
+                            <div class="comment-header">
+                                <strong>${reply.user.username}</strong>
+                                <span class="comment-date">${date}</span>
+                            </div>
+                            <p class="comment-text">${escapeHtml(reply.content)}</p>
+                        </div>
+                    </div>
+                `;
+            }
+
             // Create comment HTML
             function createCommentHtml(comment) {
                 const avatar = comment.user.username.charAt(0).toUpperCase();
                 const date = formatDate(comment.createdAt);
-                const replyCountText = comment.replies && comment.replies.length > 0 
-                    ? `${comment.replies.length} ${comment.replies.length === 1 ? 'reply' : 'replies'}`
-                    : '';
                 
                 return `
                     <div class="comment" data-comment-id="${comment.id}">
@@ -149,11 +165,11 @@
                                 <button class="comment-action-btn" onclick="toggleReplyForm(${comment.id})">
                                     💬 Reply
                                 </button>
-                                <span class="reply-count" id="reply-count-${comment.id}">${replyCountText}</span>
-                                ${comment.replies && comment.replies.length > 0 ? `
+                                ${comment.replyCount > 0 ? `
                                     <button class="comment-action-btn" id="load-replies-${comment.id}" 
-                                            onclick="toggleReplies(${comment.id})">
-                                        View replies (${comment.replies.length})
+                                            onclick="toggleReplies(${comment.id})"
+                                            data-count="${comment.replyCount}">
+                                        View replies (${comment.replyCount})
                                     </button>
                                 ` : ''}
                             </div>
@@ -166,57 +182,72 @@
                             <button class="btn-reply" onclick="submitReply(${comment.id})">Reply</button>
                         </div>
                     </div>
-                    <div id="replies-${comment.id}" class="replies-container">
-                        ${comment.replies ? comment.replies.map(reply => createReplyHtml(reply)).join('') : ''}
+                    <div id="replies-container-${comment.id}" class="replies-wrapper" style="display:none;">
+                        <div class="replies-list"></div>
+                        <div class="load-more-replies" style="display:none; text-align: center; padding: 10px;">
+                            <button class="btn-load-more" onclick="loadReplies(${comment.id})">Load more replies...</button>
+                        </div>
                     </div>
                 `;
             }
 
             // Toggle reply form
             function toggleReplyForm(commentId) {
-                const form = document.getElementById(`reply-form-${commentId}`);
-                const isActive = form.classList.contains('active');
+                const $replyForm = $(`#reply-form-${commentId}`);
+                const isActive = $replyForm.hasClass('active');
                 
-                // Close all other reply forms
-                document.querySelectorAll('.reply-form.active').forEach(f => {
-                    f.classList.remove('active');
-                });
+                $('.reply-form.active').removeClass('active');
                 
                 if (!isActive) {
-                    form.classList.add('active');
-                    document.getElementById(`reply-text-${commentId}`).focus();
+                    $replyForm.addClass('active');
+                    $(`#reply-text-${commentId}`).focus();
                 }
             }
 
             // Toggle replies visibility
             function toggleReplies(commentId) {
-                const repliesContainer = document.getElementById(`replies-${commentId}`);
-                const button = document.getElementById(`load-replies-${commentId}`);
-                
-                if (repliesContainer.classList.contains('active')) {
-                    repliesContainer.classList.remove('active');
-                    const comment = commentsData.find(c => c.id === commentId);
-                    button.textContent = `View replies (${comment.replies.length})`;
+                const $container = $(`#replies-container-${commentId}`);
+                const $button = $(`#load-replies-${commentId}`);
+
+                if ($container.is(':visible')) {
+                    $container.slideUp();
+                    $button.text(`View replies`);
                 } else {
-                    repliesContainer.classList.add('active');
-                    button.textContent = 'Hide replies';
+                    $container.slideDown();
+                    // Jika kontainer masih kosong, ambil data dari BE
+                    if ($(`#replies-container-${commentId} .replies-list`).is(':empty')) {
+                        loadReplies(commentId, 0);
+                    }
+                    $button.text('Hide replies');
                 }
             }
 
             // Load replies
-            function loadReplies(commentId, page) {
+           function loadReplies(commentId, page = 0, isAppend = true) {
+                const $container = $(`#replies-container-${commentId}`);
+                const $list = $container.find('.replies-list');
+                const $btnMore = $container.find('.load-more-replies');
+                
                 $.ajax({
                     url: `/comments/${commentId}/replies`,
-                    method: 'GET',
-                    data: {
-                        page: page,
-                        size: 3
-                    },
+                    data: { page: page, size: 5 },
                     success: function(response) {
-                        renderReplies(commentId, response.replies, response.hasNext, page);
-                    },
-                    error: function(error) {
-                        console.error('Error loading replies:', error);
+                        if (!isAppend) {
+                            $list.empty();
+                        }
+
+                        // Render setiap reply
+                        response.replies.forEach(reply => {
+                            $list.append(createReplyHtml(reply));
+                        });
+
+                        // Atur tombol "Load More"
+                        if (response.currentPage < response.totalPages - 1) {
+                            $btnMore.show();
+                            $btnMore.find('button').attr('onclick', `loadReplies(${commentId}, ${response.currentPage + 1})`);
+                        } else {
+                            $btnMore.hide();
+                        }
                     }
                 });
             }
@@ -232,27 +263,16 @@
                 }
                 
                 $.ajax({
-                    url: `/api/comments/${commentId}/reply`,
+                    url: '/comments',
                     method: 'POST',
-                    data: {
-                        newsId: newsId,
-                        content: content,
-                        author: currentUser
-                    },
+                    contentType: 'application/json',
+                    data: JSON.stringify({ content: content, contentId: newsId, contentType: "News", parentId: commentId }),
                     success: function(response) {
                         $form.find('textarea').val('');
                         toggleReplyForm(commentId);
                         
                         // Reload replies
-                        loadReplies(commentId, 0);
-                        loadRepliesCount(commentId);
-                        loadCommentCount();
-                        
-                        // Show replies if hidden
-                        const $repliesContainer = $(`#replies-${commentId}`);
-                        if (!$repliesContainer.is(':visible')) {
-                            toggleReplies(commentId);
-                        }
+                        loadReplies(commentId, 0, false);
                     },
                     error: function(error) {
                         console.error('Error posting reply:', error);
@@ -324,7 +344,7 @@
                     url: '/comments',
                     method: 'POST',
                     contentType: 'application/json',
-                    data: JSON.stringify({ content: content, commentableId: newsId, commentableType: "NEWS" }),
+                    data: JSON.stringify({ content: content, contentId: newsId, contentType: "News", parentId: null }),
                     success: function(response) {
                         $('#comment-content').val('');
                         loadComments(0);
@@ -369,12 +389,6 @@
                 margin: 0;
                 padding: 0;
                 box-sizing: border-box;
-            }
-
-            body {
-                font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
-                background-color: #f5f5f5;
-                padding: 20px;
             }
 
             .comment-section {
@@ -617,6 +631,19 @@
             .add-comment-form textarea:focus {
                 outline: none;
                 border-color: #0ea5e9;
+            }
+
+            .btn-load-more {
+                background: none;
+                border: none;
+                color: #4a5568;
+                font-size: 0.85rem;
+                cursor: pointer;
+                text-decoration: underline;
+            }
+
+            .btn-load-more:hover {
+                color: #2d3748;
             }
 
             .btn-submit-comment {

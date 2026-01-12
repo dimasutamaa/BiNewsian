@@ -11,6 +11,9 @@ import com.binewsian.repository.NewsRepository;
 import com.binewsian.service.CommentService;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+
+import java.util.Optional;
+
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -27,26 +30,26 @@ public class CommentServiceImpl implements CommentService {
     private final ActivityRepository activityRepository;
 
     public void create(CommentRequest request, User user) throws BiNewsianException {
-        if (request.commentableType() == null) {
+        if (request.contentType() == null) {
             throw new BiNewsianException("Commentable ID is required.");
         }
 
-        if (request.commentableId() == null) {
+        if (request.contentId() == null) {
             throw new BiNewsianException("Commentable type is required.");
         }
 
-        switch (request.commentableType()) {
-            case NEWS -> {
-                if (!newsRepository.existsById(request.commentableId())) {
+        switch (request.contentType()) {
+            case "News" -> {
+                if (!newsRepository.existsById(request.contentId())) {
                     throw new BiNewsianException(AppConstant.NEWS_NOT_FOUND);
                 }
             }
-            case ACTIVITY -> {
-                if (!activityRepository.existsById(request.commentableId())) {
+            case "Activity" -> {
+                if (!activityRepository.existsById(request.contentId())) {
                     throw new BiNewsianException(AppConstant.ACTIVITY_NOT_FOUND);
                 }
             }
-            case FORUM -> {
+            case "Forum" -> {
                 
             }
         }
@@ -57,10 +60,19 @@ public class CommentServiceImpl implements CommentService {
 
         Comment comment = new Comment();
 
-        comment.setContentId(request.commentableId());
-        comment.setContentType(request.commentableType().getDisplayName());
+        comment.setContentId(request.contentId());
+        comment.setContentType(request.contentType());
         comment.setContent(request.content());
         comment.setUser(user);
+
+        Long parentCommentId = request.parentId();
+
+        if (parentCommentId != null) {
+            Comment parentComment = commentRepository.findById(parentCommentId)
+                    .orElseThrow(() -> new BiNewsianException("Parent comment not found."));
+
+            comment.setParent(parentComment);
+        }
 
         commentRepository.save(comment);
     }
@@ -79,5 +91,11 @@ public class CommentServiceImpl implements CommentService {
     public Page<Comment> findPaginated(int page, int size, Long contentId, String contentType) {
         Pageable pageable = PageRequest.of(page, size, Sort.by("createdAt").descending());
         return commentRepository.findByContentIdAndContentTypeAndParentNull(contentId, contentType, pageable);
+    }
+
+    @Override
+    public Page<Comment> findReplies(int page, int size, Long parentId) {
+        Pageable pageable = PageRequest.of(page, size, Sort.by("createdAt").descending());
+        return commentRepository.findByParentId(parentId, pageable);
     }
 }
