@@ -16,6 +16,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.HashMap;
 import java.util.Map;
 
+
 @Controller
 @RequiredArgsConstructor
 public class CommentController {
@@ -70,5 +71,22 @@ public class CommentController {
         response.put("totalPages", comments.getTotalPages());
 
         return ResponseEntity.ok(response);
+    }
+
+    @PutMapping("/comments/{id}")
+    public ResponseEntity<?> updateComment(
+            @PathVariable Long id, 
+            @RequestBody CommentRequest request, 
+            HttpSession session
+    ) {
+        try {
+            User user = (User) session.getAttribute("user");
+            commentService.update(id, request, user);
+            return ResponseEntity.ok().build();
+        } catch (BiNewsianException ex) {
+            return ResponseEntity.badRequest().body(ex.getMessage());
+        } catch (Exception ex) {
+            return ResponseEntity.status(500).body(AppConstant.UNEXPECTED_SERVER_ERROR);
+        }
     }
 }

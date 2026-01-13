@@ -12,8 +12,6 @@ import com.binewsian.service.CommentService;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 
-import java.util.Optional;
-
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -78,8 +76,13 @@ public class CommentServiceImpl implements CommentService {
     }
 
     @Override
-    public void update(Long id, User user) throws BiNewsianException {
+    public void update(Long id, CommentRequest request, User user) throws BiNewsianException {
+        Comment comment = commentRepository.findById(id)
+                .orElseThrow(() -> new BiNewsianException("Comment not found."));
 
+        comment.setContent(request.content());
+
+        commentRepository.save(comment);
     }
 
     @Override

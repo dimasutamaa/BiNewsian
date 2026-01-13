@@ -132,16 +132,19 @@
             function createReplyHtml(reply) {
                 const avatar = reply.user.username.charAt(0).toUpperCase();
                 const date = formatDate(reply.createdAt);
+                const isEdited = reply.createdAt != reply.updatedAt;
+                const isOwner = reply.user.id === currentUser.id;
                 
                 return `
-                    <div class="reply-item">
+                    <div class="reply-item" data-item-id="${reply.id}" data-item-type="reply">
                         <div class="reply-avatar">${avatar}</div>
                         <div class="comment-content">
                             <div class="comment-header">
                                 <strong>${reply.user.username}</strong>
-                                <span class="comment-date">${date}</span>
+                                <span class="comment-date">${date} ${isEdited ? '(edited)' : ''}</span>
+                                ${isOwner ? createDropdownMenu(reply.id, 'reply') : ''}
                             </div>
-                            <p class="comment-text">${escapeHtml(reply.content)}</p>
+                            ${createEditableContent(reply.content, reply.id, 'reply')}
                         </div>
                     </div>
                 `;
@@ -151,16 +154,19 @@
             function createCommentHtml(comment) {
                 const avatar = comment.user.username.charAt(0).toUpperCase();
                 const date = formatDate(comment.createdAt);
+                const isEdited = comment.createdAt != comment.updatedAt;
+                const isOwner = comment.user.id === currentUser.id;
                 
                 return `
-                    <div class="comment" data-comment-id="${comment.id}">
+                    <div class="comment" data-item-id="${comment.id}" data-item-type="comment">
                         <div class="comment-avatar">${avatar}</div>
                         <div class="comment-content">
                             <div class="comment-header">
                                 <strong>${comment.user.username}</strong>
-                                <span class="comment-date">${date}</span>
+                                <span class="comment-date">${date} ${isEdited ? '(edited)' : ''}</span>
+                                ${isOwner ? createDropdownMenu(comment.id, 'comment') : ''}
                             </div>
-                            <p class="comment-text">${escapeHtml(comment.content)}</p>
+                            ${createEditableContent(comment.content, comment.id, 'comment')}
                             <div class="comment-actions">
                                 <button class="comment-action-btn" onclick="toggleReplyForm(${comment.id})">
                                     💬 Reply
@@ -189,6 +195,95 @@
                         </div>
                     </div>
                 `;
+            }
+
+            // Helper function untuk membuat dropdown menu
+            function createDropdownMenu(id, type) {
+                return `
+                    <div class="dropdown ms-auto">
+                        <button class="btn btn-link p-1 ellipsis-btn" data-bs-toggle="dropdown">
+                            <i class="bi bi-three-dots-vertical"></i>
+                        </button>
+                        <ul class="dropdown-menu dropdown-menu-end">
+                            <li>
+                                <button class="dropdown-item" onclick="editItem(${id}, '${type}')">
+                                    <i class="bi bi-pencil me-2"></i> Edit
+                                </button>
+                            </li>
+                            <li>
+                                <button class="dropdown-item text-danger" onclick="deleteItem(${id}, '${type}')">
+                                    <i class="bi bi-trash me-2"></i> Delete
+                                </button>
+                            </li>
+                        </ul>
+                    </div>
+                `;
+            }
+
+            // Helper function untuk membuat editable content
+            function createEditableContent(content, id, type) {
+                return `
+                    <div class="comment-text-container">
+                        <p class="comment-text">${escapeHtml(content)}</p>
+                        <div class="comment-edit-form" style="display:none;">
+                            <textarea class="edit-textarea">${escapeHtml(content)}</textarea>
+                            <div class="edit-form-actions">
+                                <button class="btn-cancel" onclick="cancelEdit(${id}, '${type}')">Cancel</button>
+                                <button class="btn-save" onclick="saveItem(${id}, '${type}')">Save</button>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }
+
+            // Unified edit function
+            function editItem(id, type) {
+                const $itemEl = $(`[data-item-id="${id}"][data-item-type="${type}"]`);
+                const $textContainer = $itemEl.find('.comment-text-container');
+                
+                $textContainer.find('.comment-text').hide();
+                $textContainer.find('.comment-edit-form').show();
+                $textContainer.find('.edit-textarea').focus();
+            }
+
+            // Unified cancel edit function
+            function cancelEdit(id, type) {
+                const $itemEl = $(`[data-item-id="${id}"][data-item-type="${type}"]`);
+                const $textContainer = $itemEl.find('.comment-text-container');
+                
+                $textContainer.find('.comment-text').show();
+                $textContainer.find('.comment-edit-form').hide();
+            }
+
+            // Unified save function
+            function saveItem(id, type) {
+                const $itemEl = $(`[data-item-id="${id}"][data-item-type="${type}"]`);
+                const $textContainer = $itemEl.find('.comment-text-container');
+                const $editForm = $textContainer.find('.comment-edit-form');
+                const newContent = $editForm.find('.edit-textarea').val().trim();
+                
+                if (!newContent) {
+                    alert(`${type.charAt(0).toUpperCase() + type.slice(1)} cannot be empty`);
+                    return;
+                }
+                
+                const endpoint = type === 'comment' ? `/api/comments/${id}` : `/api/replies/${id}`;
+                
+                $.ajax({
+                    url: `/comments/${id}`,
+                    method: 'PUT',
+                    contentType: 'application/json',
+                    data: JSON.stringify({ content: newContent }),
+                    success: function(response) {
+                        const $textEl = $textContainer.find('.comment-text');
+                        $textEl.text(newContent).show();
+                        $editForm.hide();
+                    },
+                    error: function(xhr, status, error) {
+                        console.error(`Error updating ${type}:`, error);
+                        alert(`Failed to update ${type}`);
+                    }
+                });
             }
 
             // Toggle reply form
@@ -397,6 +492,64 @@
                 margin: 0;
                 padding: 0;
                 box-sizing: border-box;
+            }
+
+            .comment-text-container {
+                width: 100%;
+            }
+
+            .comment-edit-form {
+                margin-top: 8px;
+            }
+
+            .edit-textarea {
+                width: 100%;
+                min-height: 80px;
+                padding: 10px;
+                border: 1px solid #ddd;
+                border-radius: 8px;
+                font-family: inherit;
+                font-size: 14px;
+                resize: vertical;
+            }
+
+            .edit-textarea:focus {
+                outline: none;
+                border-color: #007bff;
+            }
+
+            .edit-form-actions {
+                display: flex;
+                gap: 8px;
+                margin-top: 8px;
+                justify-content: flex-end;
+            }
+
+            .btn-save, .btn-cancel {
+                padding: 6px 16px;
+                border-radius: 6px;
+                border: none;
+                cursor: pointer;
+                font-size: 14px;
+                font-weight: 500;
+            }
+
+            .btn-save {
+                background-color: #007bff;
+                color: white;
+            }
+
+            .btn-save:hover {
+                background-color: #0056b3;
+            }
+
+            .btn-cancel {
+                background-color: #6c757d;
+                color: white;
+            }
+
+            .btn-cancel:hover {
+                background-color: #545b62;
             }
 
             .comment-section {
