@@ -303,11 +303,12 @@
                 const currentPage = response.currentPage; 
                 const totalPages = response.totalPages;
 
-                const prevDisabled = !response.hasPrevious ? 'disabled' : '';
+                const hasPrevious = currentPage > 0;
+                const prevDisabled = !hasPrevious ? 'disabled' : '';
                 $paginationList.append(`
                     <li class="page-item ${prevDisabled}">
                         <a class="page-link" href="javascript:void(0)" 
-                        onclick="${response.hasPrevious ? `loadComments(${currentPage - 1})` : ''}">
+                        onclick="${hasPrevious ? `loadComments(${currentPage - 1})` : ''}">
                         &laquo;
                         </a>
                     </li>
@@ -324,11 +325,12 @@
                     `);
                 }
 
-                const nextDisabled = !response.hasNext ? 'disabled' : '';
+                const hasNext = currentPage < totalPages - 1;
+                const nextDisabled = !hasNext ? 'disabled' : '';
                 $paginationList.append(`
                     <li class="page-item ${nextDisabled}">
                         <a class="page-link" href="javascript:void(0)" 
-                        onclick="${response.hasNext ? `loadComments(${currentPage + 1})` : ''}">
+                        onclick="${hasNext ? `loadComments(${currentPage + 1})` : ''}">
                         &raquo;
                         </a>
                     </li>
