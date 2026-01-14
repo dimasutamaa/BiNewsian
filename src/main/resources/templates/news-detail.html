@@ -376,12 +376,10 @@
                     success: function(response) {
                         if (!isAppend) $list.empty();
 
-                        // Render setiap reply
                         response.replies.forEach(reply => {
                             $list.append(createReplyHtml(reply));
                         });
 
-                        // Atur tombol "Load More"
                         if (response.currentPage < response.totalPages - 1) {
                             $btnMore.show();
                             $btnMore.find('button').attr('onclick', `loadReplies(${commentId}, ${response.currentPage + 1})`);
@@ -409,15 +407,33 @@
                     data: JSON.stringify({ content: content, contentId: newsId, contentType: "News", parentId: commentId }),
                     success: function(response) {
                         $form.find('textarea').val('');
-
                         toggleReplyForm(commentId);
+
+                        const $container = $(`#replies-container-${commentId}`);
+                        $container.show(); 
+
+                        let $button = $(`#load-replies-${commentId}`);
+                        
+                        if ($button.length === 0) {
+                            const newButtonHtml = `
+                                <button class="comment-action-btn" id="load-replies-${commentId}" 
+                                        onclick="toggleReplies(${commentId})"
+                                        data-count="1">
+                                    Hide replies
+                                </button>`;
+                            $(`[data-item-id="${commentId}"] .comment-actions`).append(newButtonHtml);
+                        } else {
+                            const count = parseInt($button.data('count')) || 0;
+                            const newCount = count + 1;
+                            $button.data('count', newCount);
+
+                            if (!$container.is(':visible')) {
+                                $button.text(`View replies (${newCount})`);
+                            }
+                        }
+                        
+                        $container.slideDown();
                         loadReplies(commentId, 0, false);
-
-                        const $button = $(`#load-replies-${commentId}`);
-                        const count = parseInt($button.data('count')) || 0; 
-
-                        const newCount = count + 1;
-                        $button.data('count', newCount);
                     },
                     error: function(error) {
                         console.error('Error posting reply:', error);
@@ -523,11 +539,6 @@
                 const div = document.createElement('div');
                 div.textContent = text;
                 return div.innerHTML;
-            }
-
-            // Save news function
-            function saveNews() {
-                alert('News has been saved!');
             }
             /*]]>*/
         </script>

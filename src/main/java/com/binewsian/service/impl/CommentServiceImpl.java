@@ -111,7 +111,7 @@ public class CommentServiceImpl implements CommentService {
         } else {
             Comment parent = comment.getParent();
             
-            if (parent.getDeleted() && parent.getReplyCount() <= 1) {
+            if (parent != null && parent.getDeleted() && parent.getReplyCount() <= 1) {
                 commentRepository.delete(parent);
             }
             
