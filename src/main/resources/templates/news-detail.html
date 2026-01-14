@@ -152,25 +152,29 @@
 
             // Create comment HTML
             function createCommentHtml(comment) {
-                const avatar = comment.user.username.charAt(0).toUpperCase();
+                const isDeleted = comment.deleted || comment.user === null;
+                const username = isDeleted ? '[Deleted User]' : comment.user.username;
+                const avatar = isDeleted ? '?' : username.charAt(0).toUpperCase();
                 const date = formatDate(comment.createdAt);
-                const isEdited = comment.createdAt != comment.updatedAt;
-                const isOwner = comment.user.id === currentUser.id;
+                const isEdited = !isDeleted && (comment.createdAt != comment.updatedAt);
+                const isOwner = !isDeleted && (comment.user?.id === currentUser.id);
                 
                 return `
-                    <div class="comment" data-item-id="${comment.id}" data-item-type="comment">
-                        <div class="comment-avatar">${avatar}</div>
+                    <div class="comment ${isDeleted ? 'comment-deleted' : ''}" data-item-id="${comment.id}" data-item-type="comment">
+                        <div class="comment-avatar" style="${isDeleted ? 'background: #ccc;' : ''}">${avatar}</div>
                         <div class="comment-content">
                             <div class="comment-header">
-                                <strong>${comment.user.username}</strong>
+                                <strong>${username}</strong>
                                 <span class="comment-date">${date} ${isEdited ? '(edited)' : ''}</span>
                                 ${isOwner ? createDropdownMenu(comment.id, 'comment') : ''}
                             </div>
-                            ${createEditableContent(comment.content, comment.id, 'comment')}
+                            ${createEditableContent(comment.content, comment.id, 'comment', isDeleted)}
                             <div class="comment-actions">
-                                <button class="comment-action-btn" onclick="toggleReplyForm(${comment.id})">
-                                    💬 Reply
-                                </button>
+                                ${!isDeleted ? `
+                                    <button class="comment-action-btn" onclick="toggleReplyForm(${comment.id})">
+                                        💬 Reply
+                                    </button>
+                                ` : ''}
                                 ${comment.replyCount > 0 ? `
                                     <button class="comment-action-btn" id="load-replies-${comment.id}" 
                                             onclick="toggleReplies(${comment.id})"
@@ -221,17 +225,23 @@
             }
 
             // Helper function untuk membuat editable content
-            function createEditableContent(content, id, type) {
+            function createEditableContent(content, id, type, isDeleted = false) {
+                const displayContent = isDeleted ? 'This comment has been deleted.' : escapeHtml(content);
+                const textClass = isDeleted ? 'comment-text text-muted italic' : 'comment-text';
+
                 return `
                     <div class="comment-text-container">
-                        <p class="comment-text">${escapeHtml(content)}</p>
-                        <div class="comment-edit-form" style="display:none;">
-                            <textarea class="edit-textarea">${escapeHtml(content)}</textarea>
-                            <div class="edit-form-actions">
-                                <button class="btn-cancel" onclick="cancelEdit(${id}, '${type}')">Cancel</button>
-                                <button class="btn-save" onclick="saveItem(${id}, '${type}')">Save</button>
+                        <p class="${textClass}">${displayContent}</p>
+                        
+                        ${!isDeleted ? `
+                            <div class="comment-edit-form" style="display:none;">
+                                <textarea class="edit-textarea">${escapeHtml(content)}</textarea>
+                                <div class="edit-form-actions">
+                                    <button class="btn-cancel" onclick="cancelEdit(${id}, '${type}')">Cancel</button>
+                                    <button class="btn-save" onclick="saveItem(${id}, '${type}')">Save</button>
+                                </div>
                             </div>
-                        </div>
+                        ` : ''}
                     </div>
                 `;
             }
@@ -267,8 +277,6 @@
                     return;
                 }
                 
-                const endpoint = type === 'comment' ? `/api/comments/${id}` : `/api/replies/${id}`;
-                
                 $.ajax({
                     url: `/comments/${id}`,
                     method: 'PUT',
@@ -282,6 +290,42 @@
                     error: function(xhr, status, error) {
                         console.error(`Error updating ${type}:`, error);
                         alert(`Failed to update ${type}`);
+                    }
+                });
+            }
+
+            function deleteItem(id, type) {
+                const $itemEl = $(`[data-item-id="${id}"][data-item-type="${type}"]`);
+
+                $.ajax({
+                    url: `/comments/${id}`,
+                    method: 'DELETE',
+                    success: function(response) {
+                        if (type === 'comment') {
+                            const $btnReplies = $(`#load-replies-${id}`);
+                            const hasReplies = $btnReplies.length > 0;
+
+                            if (hasReplies) {
+                                $itemEl.find('.comment-text').text('This comment has been deleted.').addClass('text-muted italic');
+                                $itemEl.find('.comment-avatar').text('?').css('background', '#ccc');
+                                $itemEl.find('strong').text('[Deleted User]');
+                                
+                                $itemEl.find('.dropdown').remove(); 
+                                $itemEl.find('button[onclick^="toggleReplyForm"]').remove();
+                                
+                            } else {
+                                $(`#reply-form-${id}, #replies-container-${id}`).remove();
+                                $itemEl.fadeOut(300, function() { $(this).remove(); });
+                            }
+                        } else {
+                            $itemEl.fadeOut(300, function() { 
+                                $(this).remove(); 
+                                updateParentReplyCount(id, -1);
+                            });
+                        }
+                    },
+                    error: function(xhr) {
+                        alert(xhr.responseText || `Failed to delete ${type}`);
                     }
                 });
             }

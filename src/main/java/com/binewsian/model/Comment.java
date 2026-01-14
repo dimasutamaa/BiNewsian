@@ -8,7 +8,6 @@ import org.hibernate.annotations.Formula;
 import org.hibernate.annotations.UpdateTimestamp;
 
 import java.time.LocalDateTime;
-import java.util.List;
 
 @Getter
 @Setter
@@ -21,6 +20,12 @@ public class Comment {
 
     @Column(nullable = false, columnDefinition = "TEXT")
     private String content;
+
+    @Column(name = "is_deleted", nullable = false)
+    private Boolean deleted = false; 
+
+    @Column(name = "deleted_at")
+    private LocalDateTime deletedAt;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "parent_id")

@@ -2,6 +2,7 @@ package com.binewsian.service.impl;
 
 import com.binewsian.constant.AppConstant;
 import com.binewsian.dto.CommentRequest;
+import com.binewsian.enums.Role;
 import com.binewsian.exception.BiNewsianException;
 import com.binewsian.model.Comment;
 import com.binewsian.model.User;
@@ -11,6 +12,8 @@ import com.binewsian.repository.NewsRepository;
 import com.binewsian.service.CommentService;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+
+import java.time.LocalDateTime;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -80,14 +83,40 @@ public class CommentServiceImpl implements CommentService {
         Comment comment = commentRepository.findById(id)
                 .orElseThrow(() -> new BiNewsianException("Comment not found."));
 
+        if (!comment.getUser().getId().equals(user.getId())) {
+            throw new BiNewsianException("You are not authorized to edit this comment.");
+        }
+
         comment.setContent(request.content());
 
         commentRepository.save(comment);
     }
 
     @Override
-    public void delete(Long id) throws BiNewsianException {
+    public void delete(Long id, User user) throws BiNewsianException {
+        Comment comment = commentRepository.findById(id)
+                .orElseThrow(() -> new BiNewsianException("Comment not found."));
+        
+        if (!comment.getUser().getId().equals(user.getId())) {
+            throw new BiNewsianException("You are not authorized to delete this comment.");
+        }
 
+        boolean isParent = comment.getParent() == null;
+        boolean hasReplies = comment.getReplyCount() != 0;
+
+        if (isParent && hasReplies) {
+            comment.setDeleted(true);
+            comment.setDeletedAt(LocalDateTime.now());
+            commentRepository.save(comment);
+        } else {
+            Comment parent = comment.getParent();
+            
+            if (parent.getDeleted() && parent.getReplyCount() <= 1) {
+                commentRepository.delete(parent);
+            }
+            
+            commentRepository.delete(comment);
+        }
     }
 
     @Override

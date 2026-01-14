@@ -89,4 +89,17 @@ public class CommentController {
             return ResponseEntity.status(500).body(AppConstant.UNEXPECTED_SERVER_ERROR);
         }
     }
+
+    @DeleteMapping("/comments/{id}")
+    public ResponseEntity<?> deleteComment(@PathVariable Long id, HttpSession session) {
+        try {
+            User user = (User) session.getAttribute("user");
+            commentService.delete(id, user);
+            return ResponseEntity.ok().build();
+        } catch (BiNewsianException ex) {
+            return ResponseEntity.badRequest().body(ex.getMessage());
+        } catch (Exception ex) {
+            return ResponseEntity.status(500).body(AppConstant.UNEXPECTED_SERVER_ERROR);
+        }
+    }
 }
