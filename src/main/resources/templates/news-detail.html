@@ -49,7 +49,7 @@
 
             <!-- Comments Section -->
             <div class="comments-section">
-                <h2><span id="comment-count">0</span> Comments</h2>
+                <h2>Comments</h2>
 
                 <!-- Comment Container -->
                 <div id="comments-container"></div>
@@ -80,7 +80,6 @@
 
             $(document).ready(function() {
                 loadComments(0);
-                loadCommentCount();
             });
 
             const $commentContent = $("#comment-content");
@@ -153,14 +152,14 @@
             // Create comment HTML
             function createCommentHtml(comment) {
                 const isDeleted = comment.deleted || comment.user === null;
-                const username = isDeleted ? '[Deleted User]' : comment.user.username;
+                const username = isDeleted ? '[?]' : comment.user.username;
                 const avatar = isDeleted ? '?' : username.charAt(0).toUpperCase();
                 const date = formatDate(comment.createdAt);
                 const isEdited = !isDeleted && (comment.createdAt != comment.updatedAt);
                 const isOwner = !isDeleted && (comment.user?.id === currentUser.id);
                 
                 return `
-                    <div class="comment ${isDeleted ? 'comment-deleted' : ''}" data-item-id="${comment.id}" data-item-type="comment">
+                    <div class="comment" data-item-id="${comment.id}" data-item-type="comment">
                         <div class="comment-avatar" style="${isDeleted ? 'background: #ccc;' : ''}">${avatar}</div>
                         <div class="comment-content">
                             <div class="comment-header">
@@ -460,6 +459,7 @@
 
                 const hasPrevious = currentPage > 0;
                 const prevDisabled = !hasPrevious ? 'disabled' : '';
+                
                 $paginationList.append(`
                     <li class="page-item ${prevDisabled}">
                         <a class="page-link" href="javascript:void(0)" 
@@ -471,6 +471,7 @@
 
                 for (let i = 0; i < totalPages; i++) {
                     const activeClass = (i === currentPage) ? 'active' : '';
+
                     $paginationList.append(`
                         <li class="page-item ${activeClass}">
                             <a class="page-link" href="javascript:void(0)" onclick="loadComments(${i})">
@@ -482,6 +483,7 @@
 
                 const hasNext = currentPage < totalPages - 1;
                 const nextDisabled = !hasNext ? 'disabled' : '';
+
                 $paginationList.append(`
                     <li class="page-item ${nextDisabled}">
                         <a class="page-link" href="javascript:void(0)" 
@@ -507,11 +509,10 @@
                     url: '/comments',
                     method: 'POST',
                     contentType: 'application/json',
-                    data: JSON.stringify({ content: content, contentId: newsId, contentType: "News", parentId: null }),
+                    data: JSON.stringify({ content: content, contentId: newsId, contentType: "NEWS", parentId: null }),
                     success: function(response) {
                         $('#comment-content').val('');
                         loadComments(0);
-                        loadCommentCount();
                         alert('Comment posted successfully!');
                     },
                     error: function(error) {
@@ -542,349 +543,6 @@
             }
             /*]]>*/
         </script>
-        <style>
-            * {
-                margin: 0;
-                padding: 0;
-                box-sizing: border-box;
-            }
-
-            .comment-text-container {
-                width: 100%;
-            }
-
-            .comment-edit-form {
-                margin-top: 8px;
-            }
-
-            .edit-textarea {
-                width: 100%;
-                min-height: 80px;
-                padding: 10px;
-                border: 1px solid #ddd;
-                border-radius: 8px;
-                font-family: inherit;
-                font-size: 14px;
-                resize: vertical;
-            }
-
-            .edit-textarea:focus {
-                outline: none;
-                border-color: #007bff;
-            }
-
-            .edit-form-actions {
-                display: flex;
-                gap: 8px;
-                margin-top: 8px;
-                justify-content: flex-end;
-            }
-
-            .btn-save, .btn-cancel {
-                padding: 6px 16px;
-                border-radius: 6px;
-                border: none;
-                cursor: pointer;
-                font-size: 14px;
-                font-weight: 500;
-            }
-
-            .btn-save {
-                background-color: #007bff;
-                color: white;
-            }
-
-            .btn-save:hover {
-                background-color: #0056b3;
-            }
-
-            .btn-cancel {
-                background-color: #6c757d;
-                color: white;
-            }
-
-            .btn-cancel:hover {
-                background-color: #545b62;
-            }
-
-            .comment-section {
-                max-width: 900px;
-                margin: 0 auto;
-                background-color: white;
-                border-radius: 8px;
-                box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-            }
-
-            .comment {
-                padding: 20px;
-                border-bottom: 1px solid #e5e5e5;
-                display: flex;
-                gap: 12px;
-            }
-
-            .comment-avatar {
-                width: 40px;
-                height: 40px;
-                border-radius: 50%;
-                background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-                color: white;
-                display: flex;
-                align-items: center;
-                justify-content: center;
-                font-weight: 600;
-                font-size: 16px;
-                flex-shrink: 0;
-            }
-
-            .comment-content {
-                flex: 1;
-            }
-
-            .comment-header {
-                display: flex;
-                align-items: center;
-                gap: 8px;
-                margin-bottom: 8px;
-            }
-
-            .comment-header strong {
-                font-size: 14px;
-                color: #1a1a1a;
-            }
-
-            .comment-date {
-                font-size: 12px;
-                color: #666;
-            }
-
-            .comment-text {
-                color: #333;
-                font-size: 14px;
-                line-height: 1.6;
-                margin-bottom: 12px;
-                white-space: pre-wrap;
-                word-wrap: break-word;
-            }
-
-            .comment-text a {
-                color: #0ea5e9;
-                text-decoration: none;
-                word-break: break-all;
-            }
-
-            .comment-text a:hover {
-                text-decoration: underline;
-            }
-
-            .comment-actions {
-                display: flex;
-                gap: 16px;
-                align-items: center;
-            }
-
-            .comment-action-btn {
-                background: none;
-                border: none;
-                color: #666;
-                font-size: 13px;
-                cursor: pointer;
-                padding: 4px 8px;
-                border-radius: 4px;
-                transition: background-color 0.2s;
-                display: flex;
-                align-items: center;
-                gap: 4px;
-            }
-
-            .comment-action-btn:hover {
-                background-color: #f5f5f5;
-            }
-
-            .reply-count {
-                font-size: 13px;
-                color: #666;
-            }
-
-            .reply-form {
-                margin-left: 52px;
-                margin-top: 12px;
-                margin-bottom: 12px;
-                display: none;
-                background-color: #f9f9f9;
-                border-radius: 6px;
-                padding: 12px;
-            }
-
-            .reply-form.active {
-                display: block;
-            }
-
-            .reply-form textarea {
-                width: 100%;
-                min-height: 80px;
-                padding: 10px;
-                border: 1px solid #ddd;
-                border-radius: 4px;
-                font-family: inherit;
-                font-size: 14px;
-                resize: vertical;
-                margin-bottom: 10px;
-            }
-
-            .reply-form textarea:focus {
-                outline: none;
-                border-color: #0ea5e9;
-            }
-
-            .reply-form-actions {
-                display: flex;
-                gap: 8px;
-                justify-content: flex-end;
-            }
-
-            .btn-cancel, .btn-reply {
-                padding: 8px 16px;
-                border-radius: 4px;
-                font-size: 13px;
-                font-weight: 500;
-                cursor: pointer;
-                border: none;
-                transition: all 0.2s;
-            }
-
-            .btn-cancel {
-                background-color: white;
-                color: #666;
-                border: 1px solid #ddd;
-            }
-
-            .btn-cancel:hover {
-                background-color: #f5f5f5;
-            }
-
-            .btn-reply {
-                background-color: #0ea5e9;
-                color: white;
-            }
-
-            .btn-reply:hover {
-                background-color: #0284c7;
-            }
-
-            .replies-container {
-                margin-left: 52px;
-                border-left: 2px solid #e5e5e5;
-                padding-left: 20px;
-                display: none;
-                margin-bottom: 12px;
-            }
-
-            .replies-container.active {
-                display: block;
-            }
-
-            .reply-item {
-                padding: 12px 0;
-                display: flex;
-                gap: 12px;
-            }
-
-            .reply-avatar {
-                width: 32px;
-                height: 32px;
-                border-radius: 50%;
-                background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
-                color: white;
-                display: flex;
-                align-items: center;
-                justify-content: center;
-                font-weight: 600;
-                font-size: 14px;
-                flex-shrink: 0;
-            }
-
-            .loading {
-                display: flex;
-                justify-content: center;
-                padding: 20px;
-            }
-
-            .spinner {
-                width: 24px;
-                height: 24px;
-                border: 3px solid #f3f3f3;
-                border-top: 3px solid #0ea5e9;
-                border-radius: 50%;
-                animation: spin 1s linear infinite;
-            }
-
-            @keyframes spin {
-                0% { transform: rotate(0deg); }
-                100% { transform: rotate(360deg); }
-            }
-
-            .add-comment-section {
-                padding: 20px;
-                border-top: 1px solid #e5e5e5;
-            }
-
-            .add-comment-form {
-                display: flex;
-                gap: 12px;
-            }
-
-            .add-comment-form textarea {
-                flex: 1;
-                min-height: 60px;
-                padding: 10px;
-                border: 1px solid #ddd;
-                border-radius: 4px;
-                font-family: inherit;
-                font-size: 14px;
-                resize: vertical;
-            }
-
-            .add-comment-form textarea:focus {
-                outline: none;
-                border-color: #0ea5e9;
-            }
-
-            .btn-load-more {
-                background: none;
-                border: none;
-                color: #4a5568;
-                font-size: 0.85rem;
-                cursor: pointer;
-                text-decoration: underline;
-            }
-
-            .btn-load-more:hover {
-                color: #2d3748;
-            }
-
-            .btn-submit-comment {
-                padding: 10px 20px;
-                background-color: #0ea5e9;
-                color: white;
-                border: none;
-                border-radius: 4px;
-                font-size: 14px;
-                font-weight: 500;
-                cursor: pointer;
-                transition: background-color 0.2s;
-                align-self: flex-start;
-            }
-
-            .btn-submit-comment:hover {
-                background-color: #0284c7;
-            }
-
-            .empty-state {
-                padding: 40px 20px;
-                text-align: center;
-                color: #666;
-            }
-        </style>
     </th:block>
 </body>
 </html>
