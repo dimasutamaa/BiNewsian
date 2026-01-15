@@ -53,16 +53,12 @@
             <!-- Comments Section -->
             <div class="comments-section">
                 <h2>Comments</h2>
-
-                <!-- Comment Container -->
                 <div id="comments-container"></div>
-
-                <!-- Pagination -->
-                <nav id="comment-pagination" class="mt-4" style="display: none;">
-                    <ul class="pagination justify-content-center" id="pagination-list"></ul>
-                </nav>
-
-                <!-- Comment Form -->
+                <div class="text-center mt-4">
+                    <button id="load-more-comments" class="btn btn-load-more" onclick="loadComments()" style="display:none;">
+                        Load more comments...
+                    </button>
+                </div>
                 <div class="comment-form">
                     <h3>Write a Comment</h3>
                     <form id="comment-form">
@@ -133,6 +129,7 @@
 
             let currentPage = 0;
             const pageSize = 5;
+            let isLastPage = false;
 
             $(document).ready(function() {
                 loadComments(0);
@@ -146,18 +143,24 @@
 
             // Load comments with pagination
             function loadComments(page) {
+                if (isLastPage) return;
+
                 $.ajax({
                     url: "/comments",
-                    method: 'GET',
+                    method: "GET",
                     data: {
                         contentId: newsId,
                         contentType: "NEWS",
-                        page: page,
+                        page: currentPage,
                         size: pageSize
                     },
-                    success: function(response) {
-                        renderComments(response.comments);
-                        updatePagination(response);
+                    success: function (response) {
+                        renderComments(response.comments, true); 
+
+                        currentPage++;
+                        isLastPage = response.last;
+
+                        toggleLoadMoreButton(response);
                     },
                     error: function(error) {
                         console.error('Error loading comments:', error);
@@ -167,7 +170,7 @@
             }
 
             // Render comments
-            function renderComments(comments) {
+            function renderComments(comments, append = false) {
                 const $commentsContainer = $('#comments-container');
                 
                 if (comments.length === 0) {
@@ -175,12 +178,21 @@
                     return;
                 }
 
-                $commentsContainer.empty();
-                
+                if (!append) $commentsContainer.empty();
+
                 comments.forEach(comment => {
-                    const commentHtml = createCommentHtml(comment);
-                    $commentsContainer.append(commentHtml);
+                    $commentsContainer.append(createCommentHtml(comment));
                 });
+            }
+
+            function toggleLoadMoreButton(response) {
+                const $btn = $('#load-more-comments');
+
+                if (response.totalPages <= 1 || response.currentPage == response.totalPages - 1) {
+                    $btn.hide();
+                } else {
+                    $btn.show();
+                }
             }
 
             // Create reply HTML
@@ -208,7 +220,7 @@
             // Create comment HTML
             function createCommentHtml(comment) {
                 const isDeleted = comment.deleted || comment.user === null;
-                const username = isDeleted ? '[?]' : comment.user.username;
+                const username = isDeleted ? '[Deleted User]' : comment.user.username;
                 const avatar = isDeleted ? '?' : username.charAt(0).toUpperCase();
                 const date = formatDate(comment.createdAt);
                 const isEdited = !isDeleted && (comment.createdAt != comment.updatedAt);
