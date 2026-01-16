@@ -1,5 +1,6 @@
 package com.binewsian.service.impl;
 
+import com.binewsian.constant.AppConstant;
 import com.binewsian.exception.BiNewsianException;
 import com.binewsian.enums.Role;
 import com.binewsian.model.User;
@@ -20,41 +21,35 @@ public class AuthServiceImpl implements AuthService {
 
     @Override
     public void register(String username, String password, String email) throws BiNewsianException {
-        if (userRepository.existsByUsername(username)) {
-            throw new BiNewsianException("Username sudah digunakan");
+        if (userRepository.existsByUsernameAllIgnoreCase(username)) {
+            throw new BiNewsianException(AppConstant.USERNAME_ALREADY_EXISTS);
         }
-        if (userRepository.existsByEmail(email)) {
-            throw new BiNewsianException("Email sudah digunakan");
+        if (userRepository.existsByEmailAllIgnoreCase(email)) {
+            throw new BiNewsianException(AppConstant.EMAIL_ALREADY_EXISTS);
         }
 
         User user = new User();
         user.setUsername(username);
         user.setPassword(passwordEncoder.encode(password));
-        user.setEmail(email);
+        user.setEmail(email.toLowerCase());
         user.setRole(Role.USER);
 
         userRepository.save(user);
     }
 
     @Override
-    public User authenticate(String username, String password) {
-        Optional<User> userOpt = userRepository.findByUsername(username);
-        User user = null;
+    public User authenticate(String email, String password) throws BiNewsianException {
+        User user = userRepository.findByEmail(email.toLowerCase()).orElseThrow(() -> new BiNewsianException(AppConstant.USER_NOT_FOUND));
 
-        if (userOpt.isPresent()) {
-            user = userOpt.get();
+        if (!user.isEnabled()) {
+            throw new BiNewsianException(AppConstant.USER_HAS_BEEN_DEACTIVATED);
         }
 
-        if (user != null) {
-            if (!user.isEnabled()) {
-                return null;
-            }
-            if (passwordEncoder.matches(password, user.getPassword())) {
-                return user;
-            }
+        if (!passwordEncoder.matches(password, user.getPassword())) {
+            throw new BiNewsianException(AppConstant.INCORRECT_EMAIL_PASSWORD);
         }
 
-        return null;
+        return user;
     }
 
 }

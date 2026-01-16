@@ -7,6 +7,7 @@ import lombok.Getter;
 import lombok.Setter;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
+import org.springframework.format.annotation.DateTimeFormat;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -30,9 +31,17 @@ public class Activity {
     private Integer rewardAmount;
     private String registrationLink;
     private String location;
+
+    @DateTimeFormat(pattern = "HH:mm")
     private LocalTime timeStart;
+
+    @DateTimeFormat(pattern = "HH:mm")
     private LocalTime timeEnd;
+
+    @DateTimeFormat(pattern = "yyyy-MM-dd")
     private LocalDate activityDate;
+
+    @DateTimeFormat(pattern = "yyyy-MM-dd'T'HH:mm")
     private LocalDateTime registrationDeadline;
 
     @Column(columnDefinition = "TEXT")
@@ -43,6 +52,10 @@ public class Activity {
     private ActivityStatus status;
 
     private LocalDateTime publishedAt;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "created_by_id", nullable = false, updatable = false)
+    private User createdBy;
 
     @CreationTimestamp
     @Column(name = "created_at", nullable = false, updatable = false)

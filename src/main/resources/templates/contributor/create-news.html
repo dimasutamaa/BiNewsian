@@ -27,7 +27,7 @@
                             <form>
                                 <div class="mb-3">
                                     <label for="title" class="form-label">Article Title<span class="text-danger">*</span></label>
-                                    <input type="text" class="form-control" id="title">
+                                    <input type="text" class="form-control" id="title" required>
                                     <div id="titleError" class="invalid-feedback"></div>
                                 </div>
 
@@ -35,21 +35,34 @@
                                     <div class="col-md-4 mb-3">
                                         <label for="category" class="form-label">Category<span class="text-danger">*</span></label>
                                         <select class="form-select" data-placeholder="Choose" id="category">
-                                            <option selected>Select a category</option>
-                                            <option value="TECHNOLOGY">Technology</option>
-                                            <option value="BUSINESS">Business</option>
-                                            <option value="SPORTS">Sports</option>
-                                            <option value="ENTERTAINMENT">Entertainment</option>
-                                            <option value="HEALTH">Health</option>
-                                            <option value="SCIENCE">Science</option>
+                                            <option value="" selected disabled>Select a category</option>
+                                            <option th:each="category : ${categories}" 
+                                                    th:value="${category.id}" 
+                                                    th:text="${category.name}">
                                         </select>
                                         <div id="categoryError" class="invalid-feedback"></div>
                                     </div>
 
                                     <div class="col-md-8 mb-3">
-                                        <label for="featuredImage" class="form-label">Featured Image (5MB)</label>
+                                        <label for="featuredImage" class="form-label">Featured Image (5MB)<span class="text-danger">*</span></label>
                                         <input class="form-control" type="file" id="featuredImage" accept="image/png,image/jpeg,image/jpg,image/webp">
                                         <div id="featuredImageError" class="invalid-feedback"></div>
+
+                                        <!-- Image Preview Container -->
+                                        <div id="previewContainer" class="upload-preview d-none">
+                                            <div id="previewCard" class="upload-preview__card">
+                                                <div class="upload-preview__content">
+                                                    <img id="previewThumbnail" src="" alt="Preview" class="upload-preview__thumb">
+                                                    <div class="upload-preview__info">
+                                                        <div id="previewFileName" class="fw-medium upload-preview__name"></div>
+                                                        <small id="previewFileSize" class="upload-preview__size"></small>
+                                                    </div>
+                                                </div>
+                                                <button type="button" class="btn btn-link p-0 upload-preview__btn-delete" id="btnRemoveImage">
+                                                    <i class="bi bi-trash"></i>
+                                                </button>
+                                            </div>
+                                        </div>
                                     </div>
                                 </div>
 
@@ -61,7 +74,7 @@
 
                                 <div class="mb-3">
                                     <label class="form-label">Article Content<span class="text-danger">*</span></label>
-                                    <div id="articleEditor" style="height: 400px;"></div>
+                                    <div id="articleEditor" class="rich-text-editor"></div>
                                     <input type="hidden" id="article-content">
                                     <div id="articleEditorError" class="invalid-feedback"></div>
                                 </div>
@@ -81,13 +94,79 @@
                 </div>
             </div>
         </div>
+
+        <!-- Image Viewer Modal -->
+        <div class="modal fade" id="imageViewerModal" tabindex="-1">
+            <div class="modal-dialog modal-dialog-centered modal-lg">
+                <div class="modal-content">
+                    <div class="modal-body text-center">
+                        <img id="imageViewerDisplay" src="" alt="Image Preview" class="img-fluid">
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
 
     <th:block layout:fragment="scripts">
         <script>
             const MAX_FILE_SIZE = 5 * 1024 * 1024;
             const articleEditor = new Quill("#articleEditor", quillConfig);
-            const fileInput = $("#featuredImage").get(0);
+
+            const $featuredImage = $("#featuredImage");
+
+            const $previewContainer = $("#previewContainer");
+            const $previewThumbnail = $("#previewThumbnail");
+            const $previewFileName = $("#previewFileName");
+            const $previewFileSize = $("#previewFileSize");
+
+            const $imageViewerModal = $("#imageViewerModal");
+            const $imageViewerDisplay = $("#imageViewerDisplay");
+
+            let imageUrl = null;
+
+            $("#btnPreviewImage").on("click", function () {
+                const currentSrc = $previewThumbnail.attr("src");
+
+                if (currentSrc) {
+                    $imageViewerDisplay.attr("src", currentSrc);
+                    $imageViewerModal.modal("show");
+                }
+            });
+            
+            $("#btnRemoveImage").on("click", function () {
+                if (imageUrl) {
+                    URL.revokeObjectURL(imageUrl);
+                }
+
+                imageUrl = null;
+                $featuredImage.val("");
+
+                $previewThumbnail.attr("src", "");
+                $previewFileName.text("");
+                $previewFileSize.text("")
+                $previewContainer.addClass("d-none");
+            });
+            
+            $featuredImage.on("change", function () {
+                const file = this.files[0];
+                if (file) {
+                    const isValid = validateFile(file);
+                    if (!isValid) {
+                        this.value = "";
+                        return;
+                    }
+
+                    clearInvalid("featuredImage");
+
+                    imageUrl = URL.createObjectURL(file);
+                    const fileSize = (file.size / (1024 * 1024)).toFixed(2);
+
+                    $previewThumbnail.attr("src", imageUrl);
+                    $previewFileName.text(file.name);
+                    $previewFileSize.text(`${fileSize}MB`);
+                    $previewContainer.removeClass("d-none");
+                }
+            });
 
             function setInvalid(id, message) {
                 $(`#${id}`).addClass("is-invalid");
@@ -99,14 +178,17 @@
                 $(`#${id}Error`).text("");
             }
 
+            const $articleEditor = $("#articleEditor");
+            const $articleEditorError = $("#articleEditorError");
+
             function setInvalidEditor(message) {
-                $("#articleEditor").addClass("is-invalid form-control").css("border", "1px solid #dc3545");
-                $("#articleEditorError").text(message).addClass("d-block");
+                $articleEditor.addClass("is-invalid form-control").css("border", "1px solid #dc3545");
+                $articleEditorError.text(message).addClass("d-block");
             }
 
             function clearInvalidEditor() {
-                $("#articleEditor").removeClass("is-invalid form-control").css("border", "");
-                $("#articleEditorError").text("").removeClass("d-block");
+                $articleEditor.removeClass("is-invalid form-control").css("border", "");
+                $articleEditorError.text("").removeClass("d-block");
             }
 
             function clearValidation() {
@@ -116,17 +198,15 @@
             }
 
             function validateFile(file) {
-                let isValid = true;
-
                 if (!file.type.startsWith("image/")) {
                     setInvalid("featuredImage", "Allowed formats: JPG, PNG, WebP");
-                    isValid = false;
+                    return false;
                 } else if (file.size > MAX_FILE_SIZE) {
                     setInvalid("featuredImage", "Image size must be less than 5MB");
-                    isValid = false;
+                    return false;
                 }
 
-                return isValid;
+                return true;
             }
 
             function validatePublish() {
@@ -139,7 +219,7 @@
                 }
 
                 const category = $("#category").val();
-                if (!category || category === "Select a category") {
+                if (!category || isNaN(category) || category === "Select a category") {
                     setInvalid("category", "Please select a valid category");
                     isValid = false;
                 }
@@ -152,33 +232,31 @@
 
                 const editorText = articleEditor.getText().trim();
                 if (editorText.length === 0) {
-                    setInvalidEditor("Summary cannot be empty");
+                    setInvalidEditor("Content cannot be empty");
                     isValid = false;
                 }
 
-                const file = fileInput.files[0];
+                const file = $featuredImage.get(0).files[0];
                 if (!file) {
                     setInvalid("featuredImage", "Featured image is required");
                     isValid = false;
-                } else {
-                    if (!file.type.startsWith("image")) {
-                        setInvalid("featuredImage", "Allowed formats: JPG, PNG, WebP");
-                        isValid = false;
-                    } else if (file.size > MAX_FILE_SIZE) {
-                        setInvalid("featuredImage", "Image size must be less than 5MB");
-                        isValid = false;
-                    }
-                }
+                } 
 
-                return isValid && validateFile(file);
+                return isValid && file && validateFile(file);
             }
 
             function validateDraft() {
-                const file = fileInput.files[0];
-                if (file) {
-                    return validateFile(file);
+                let isValid = true;
+
+                const summary = $("#summary").val();
+                if (summary && summary.length > 200) {
+                    setInvalid("summary", "Summary cannot exceed 200 characters");
+                    isValid = false;
                 }
-                return true;
+
+                const file = $featuredImage.get(0).files[0];
+
+                return isValid && (file ? validateFile(file) : true);
             }
 
             function emptyToNull(value) {
@@ -186,22 +264,22 @@
             }
 
             function buildPayload(isDraft) {
-                const categoryValue = $("#category").val();
                 const editorText = articleEditor.getText().trim();
                 const editorHtml = articleEditor.root.innerHTML;
 
                 const data = {
                     title: emptyToNull($("#title").val().trim()),
-                    category: categoryValue === "Select a category" ? null : categoryValue,
+                    categoryId: $("#category").val(),
                     summary: emptyToNull($("#summary").val().trim()),
                     content: editorText.length === 0 ? null : editorHtml,
-                    isDraft: isDraft
+                    isDraft: isDraft,
+                    deleteImage: false
                 }
 
                 const formData = new FormData();
                 formData.append("data", new Blob([JSON.stringify(data)], { type: "application/json" }))
 
-                const file = fileInput.files[0];
+                const file = $featuredImage.get(0).files[0];
                 if (file) {
                     formData.append("featuredImage", file)
                 }
@@ -232,7 +310,7 @@
                 const data = buildPayload(isDraft);
 
                 $.ajax({
-                    url: "/contributor/news/create",
+                    url: "/contributor/news",
                     method: "POST",
                     processData: false,
                     contentType: false,
@@ -279,12 +357,6 @@
                 })
             })
         </script>
-        <style>
-            #articleEditor.is-invalid .ql-toolbar,
-            #articleEditor.is-invalid .ql-editor {
-                border-color: #dc3545 !important;
-            }
-        </style>
     </th:block>
 </body>
 </html>

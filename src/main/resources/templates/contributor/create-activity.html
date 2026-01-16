@@ -27,7 +27,7 @@
                             <form>
                                 <div class="mb-3">
                                     <label for="title" class="form-label">Activity Title<span class="text-danger">*</span></label>
-                                    <input type="text" class="form-control" id="title">
+                                    <input type="text" class="form-control" id="title" required>
                                     <div id="titleError" class="invalid-feedback"></div>
                                 </div>
 
@@ -35,9 +35,10 @@
                                     <div class="col-md-3 mb-3">
                                         <label for=activityType class="form-label">Type<span class="text-danger">*</span></label>
                                         <select class="form-select" id=activityType>
-                                            <option selected>Select a type</option>
-                                            <option value="STUDENT_ACTIVITY_TRANSCRIPT">Student Activity Transcript</option>
-                                            <option value="COMMUNITY_SERVICE">Community Service</option>
+                                            <option value="" selected disabled>Select a type</option>
+                                            <option th:each="type : ${activityTypes}" 
+                                                    th:value="${type.name()}" 
+                                                    th:text="${type.displayName}">
                                         </select>
                                         <div id="activityTypeError" class="invalid-feedback"></div>
                                     </div>
@@ -102,7 +103,7 @@
 
                                 <div class="mb-3">
                                     <label class="form-label">Activity Details<span class="text-danger">*</span></label>
-                                    <div id="activityEditor" style="height: 400px;"></div>
+                                    <div id="activityEditor" class="rich-text-editor"></div>
                                     <input type="hidden" id="activityDetails">
                                     <div id="activityEditorError" class="invalid-feedback"></div>
                                 </div>
@@ -220,9 +221,6 @@
                 if (activityDate && timeStart && deadlineRaw) {
                     const deadline = getDateTime(deadlineRaw);
                     const activityStart = new Date(`${activityDateRaw}T${timeStart}`);
-
-                    console.log("Deadline:", deadline);
-                    console.log("Activity Start:", activityStart);
 
                     if (deadline >= activityStart) {
                         setInvalid("registrationDeadline", "Registration deadline must be before activity start time");
@@ -391,7 +389,7 @@
                 const data = buildPayload(isDraft);
 
                 $.ajax({
-                    url: "/contributor/activities/create",
+                    url: "/contributor/activities",
                     method: "POST",
                     contentType: "application/json",
                     data: JSON.stringify(data),
@@ -437,12 +435,6 @@
                 })
             })
         </script>
-        <style>
-            #activityEditor.is-invalid .ql-toolbar,
-            #activityEditor.is-invalid .ql-editor {
-                border-color: #dc3545 !important;
-            }
-        </style>
     </th:block>
 </body>
 </html>

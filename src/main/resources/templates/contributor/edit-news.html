@@ -1,0 +1,403 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout" layout:decorate="~{layout/panel}">
+<head>
+    <title>Edit News</title>
+</head>
+<body>
+    <div layout:fragment="content">
+        <div class="container mb-4">
+            <div class="d-flex flex-wrap gap-2">
+                <a th:href="@{/contributor/content}" class="btn btn-gradient" style="border:1px solid #c3c4c7;">
+                    <i class="bi bi-grid-1x2"></i> Dashboard
+                </a>
+                <a th:href="@{/contributor/create-news}" class="btn btn-light" style="border:1px solid #c3c4c7;">
+                    <i class="bi bi-plus-lg"></i> Create News
+                </a>
+                <a th:href="@{/contributor/create-activity}" class="btn btn-light" style="border:1px solid #c3c4c7;">
+                    <i class="bi bi-plus-lg"></i> Create Activity
+                </a>
+            </div>
+        </div>
+
+        <div class="container mb-4">
+            <div class="row">
+                <div class="col-md-12">
+                    <div class="card content-card mb-4">
+                        <div class="card-body">
+                            <form th:object="${news}">
+                                <input type="hidden" th:field="${news.id}" id="id">
+                                <div class="mb-3">
+                                    <label for="title" class="form-label">Article Title<span class="text-danger">*</span></label>
+                                    <input type="text" class="form-control" th:field="${news.title}" id="title">
+                                    <div id="titleError" class="invalid-feedback"></div>
+                                </div>
+
+                                <div class="row">
+                                    <div class="col-md-4 mb-3">
+                                        <label for="category" class="form-label">Category<span class="text-danger">*</span></label>
+                                        <select class="form-select" data-placeholder="Choose" th:field="${news.category}" id="category">
+                                            <option value="" disabled>Select a category</option>
+                                            <option th:each="category : ${categories}" 
+                                                    th:value="${category.id}" 
+                                                    th:text="${category.name}">
+                                        </select>
+                                        <div id="categoryError" class="invalid-feedback"></div>
+                                    </div>
+
+                                    <div class="col-md-8 mb-3">
+                                        <label for="featuredImage" class="form-label">Featured Image (5MB)<span class="text-danger">*</span></label>
+                                        <input class="form-control" type="file" id="featuredImage" accept="image/png,image/jpeg,image/jpg,image/webp">
+                                        <input type="hidden" th:field="${news.featuredImageKey}" id="existingImageKey">
+                                        <input type="hidden" th:field="${news.featuredImageUrl}" id="existingImageUrl">
+                                        <input type="hidden" th:field="${news.featuredImageFileName}" id="existingImageName">
+                                        <div id="featuredImageError" class="invalid-feedback"></div>
+
+                                        <!-- Image Preview Container -->
+                                        <div id="previewContainer" class="upload-preview d-none">
+                                            <div id="previewCard" class="upload-preview__card">
+                                                <div class="upload-preview__content">
+                                                    <img id="previewThumbnail" src="" alt="Preview" class="upload-preview__thumb">
+                                                    <div class="upload-preview__info">
+                                                        <div id="previewFileName" class="fw-medium upload-preview__name"></div>
+                                                        <small id="previewFileSize" class="upload-preview__size"></small>
+                                                    </div>
+                                                </div>
+                                                <button type="button" th:if="${canEdit}" class="btn btn-link p-0 upload-preview__btn-delete" id="btnRemoveImage">
+                                                    <i class="bi bi-trash"></i>
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="mb-3">
+                                    <label for="summary" class="form-label">Summary<span class="text-danger">*</span></label>
+                                    <textarea class="form-control" th:field="${news.summary}" id="summary" rows="3" placeholder="Write a brief summary of your article (max 200 characters)"></textarea>
+                                    <div id="summaryError" class="invalid-feedback"></div>
+                                </div>
+
+                                <div class="mb-3">
+                                    <label class="form-label">Article Content<span class="text-danger">*</span></label>
+                                    <div id="articleEditor" class="rich-text-editor"></div>
+                                    <input type="hidden" th:field="${news.content}" id="articleContent">
+                                    <div id="articleEditorError" class="invalid-feedback"></div>
+                                </div>
+
+                                <div class="d-flex justify-content-end gap-2 mt-4">
+                                    <button type="submit" th:if="${canEdit}" id="btnSaveDraft" class="btn btn-outline-secondary">
+                                        <i class="bi bi-save me-2"></i> Save as Draft
+                                    </button>
+
+                                    <button type="submit" th:if="${canEdit}" id="btnPublish" class="btn btn-purple">
+                                        <i class="bi bi-check-circle me-2"></i> Publish
+                                    </button>
+                                </div>  
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Image Viewer Modal -->
+        <div class="modal fade" id="imageViewerModal" tabindex="-1">
+            <div class="modal-dialog modal-dialog-centered modal-lg">
+                <div class="modal-content">
+                    <div class="modal-body text-center">
+                        <img id="imageViewerDisplay" src="" alt="Image Preview" class="img-fluid">
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <th:block layout:fragment="scripts">
+        <script>
+            const MAX_FILE_SIZE = 5 * 1024 * 1024;
+            const articleEditor = new Quill("#articleEditor", quillConfig);
+
+            const initialContent = $("#articleContent").val();
+            if (initialContent) {
+                articleEditor.root.innerHTML = initialContent;
+            }
+
+            let currentImageData = { 
+                key: null, 
+                url: null, 
+                fileName: null,
+                isFromServer: false,
+                shouldDelete: false 
+            };
+
+            const $featuredImage = $("#featuredImage");
+
+            const $previewContainer = $("#previewContainer");
+            const $previewThumbnail = $("#previewThumbnail");
+            const $previewFileName = $("#previewFileName");
+            const $previewFileSize = $("#previewFileSize");
+
+            const $imageViewerModal = $("#imageViewerModal");
+            const $imageViewerDisplay = $("#imageViewerDisplay");
+
+            const existingImageKey = $("#existingImageKey").val();
+            const existingImageUrl = $("#existingImageUrl").val();
+            const existingImageName = $("#existingImageName").val();
+
+            if (existingImageUrl && existingImageUrl !== "" && existingImageUrl !== "null") {
+                currentImageData.key = existingImageKey; 
+                currentImageData.url = existingImageUrl;
+                currentImageData.fileName = existingImageName;
+                currentImageData.isFromServer = true;
+                currentImageData.shouldDelete = false;
+
+                $previewThumbnail.attr("src", currentImageData.url);
+                $previewFileName.text(currentImageData.fileName);
+                $previewFileSize.addClass("d-none");
+                $previewContainer.removeClass("d-none");
+            }
+
+            $("#previewCard").on("click", function () {
+                const currentSrc = $previewThumbnail.attr("src");
+
+                if (currentSrc) {
+                    $("#imageViewerDisplay").attr("src", currentSrc);
+                    $("#imageViewerModal").modal("show");
+                }
+            });
+
+            $("#btnRemoveImage").on("click", function () {
+                if (currentImageData.url && !currentImageData.isFromServer) {
+                    URL.revokeObjectURL(currentImageData.url);
+                } 
+
+                currentImageData.key = null;
+                currentImageData.url = null;
+                currentImageData.shouldDelete = currentImageData.isFromServer;
+
+                $featuredImage.val("");
+
+                $previewThumbnail.attr("src", "");
+                $previewFileName.text("");
+                $previewFileSize.text("");
+                $previewContainer.addClass("d-none");
+            });
+
+            $featuredImage.on("change", function () {
+                const file = this.files[0];
+
+                if (file) {
+                    const isValid = validateFile(file);
+                    if (!isValid) {
+                        this.value = "";
+                        return;
+                    }
+
+                    clearInvalid("featuredImage");
+
+                    if (currentImageData.url && !currentImageData.isFromServer) {
+                        URL.revokeObjectURL(currentImageData.url);
+                    }
+                    
+                    currentImageData.key = file.name; 
+                    currentImageData.url = URL.createObjectURL(file);
+                    currentImageData.shouldDelete = currentImageData.isFromServer;
+
+                    const fileSize = (file.size / (1024 * 1024)).toFixed(2);
+
+                    $previewThumbnail.attr("src", currentImageData.url);
+                    $previewFileName.text(file.name);
+                    $previewFileSize.removeClass("d-none").text(`${fileSize}MB`);
+                    $previewContainer.removeClass("d-none");
+                }
+            });
+
+            function setInvalid(id, message) {
+                $(`#${id}`).addClass("is-invalid");
+                $(`#${id}Error`).text(message);
+            }
+
+            function clearInvalid(id) {
+                $(`#${id}`).removeClass("is-invalid");
+                $(`#${id}Error`).text("");
+            }
+
+            function setInvalidEditor(message) {
+                $("#articleEditor").addClass("is-invalid form-control").css("border", "1px solid #dc3545");
+                $("#articleEditorError").text(message).addClass("d-block");
+            }
+
+            function clearInvalidEditor() {
+                $("#articleEditor").removeClass("is-invalid form-control").css("border", "");
+                $("#articleEditorError").text("").removeClass("d-block");
+            }
+
+            function clearValidation() {
+                $(".is-invalid").removeClass("is-invalid");
+                $(".invalid-feedback").text("").removeClass("d-block");
+                clearInvalidEditor();
+            }
+
+            function validateFile(file) {
+                if (!file.type.startsWith("image/")) {
+                    setInvalid("featuredImage", "Allowed formats: JPG, PNG, WebP");
+                    return false;
+                } else if (file.size > MAX_FILE_SIZE) {
+                    setInvalid("featuredImage", "Image size must be less than 5MB");
+                    return false;
+                }
+
+                return true;
+            }
+
+            function validatePublish() {
+                let isValid = true;
+
+                const title = $("#title").val();
+                if (!title) {
+                    setInvalid("title", "Title is required");
+                    isValid = false;
+                }
+
+                const category = $("#category").val();
+                if (!category || isNaN(category) || category === "Select a category") {
+                    setInvalid("category", "Please select a valid category");
+                    isValid = false;
+                }
+
+                const summary = $("#summary").val();
+                if (!summary) {
+                    setInvalid("summary", "Summary cannot be empty");
+                    isValid = false;
+                }
+
+                const editorText = articleEditor.getText().trim();
+                if (editorText.length === 0) {
+                    setInvalidEditor("Content cannot be empty");
+                    isValid = false;
+                }
+
+                const file = $featuredImage.get(0).files[0];
+                if (!file) {
+                    setInvalid("featuredImage", "Featured image is required");
+                    isValid = false;
+                } 
+
+                return isValid && file && validateFile(file);
+            }
+
+            function validateDraft() {
+                let isValid = true;
+
+                const summary = $("#summary").val();
+                if (summary && summary.length > 200) {
+                    setInvalid("summary", "Summary cannot exceed 200 characters");
+                    isValid = false;
+                }
+
+                const file = $featuredImage.get(0).files[0];
+
+                return isValid && (file ? validateFile(file) : true);
+            }
+
+            function emptyToNull(value) {
+                return value === "" ? null : value;
+            }
+
+            function buildPayload(isDraft) {
+                const editorText = articleEditor.getText().trim();
+                const editorHtml = articleEditor.root.innerHTML;
+
+                const data = {
+                    title: emptyToNull($("#title").val().trim()),
+                    categoryId: $("#category").val(),
+                    summary: emptyToNull($("#summary").val().trim()),
+                    content: editorText.length === 0 ? null : editorHtml,
+                    deleteImage: currentImageData.shouldDelete,
+                    isDraft: isDraft
+                }
+
+                const formData = new FormData();
+                formData.append("data", new Blob([JSON.stringify(data)], { type: "application/json" }))
+
+                const file = $featuredImage.get(0).files[0];
+                if (file) {
+                    formData.append("featuredImage", file)
+                }
+
+                return formData;
+            }
+
+            $("input, select").on("input change", function () {
+                clearInvalid(this.id);
+            });
+
+            articleEditor.on('text-change', function() {
+                if (articleEditor.getText().trim().length > 0) {
+                    clearInvalidEditor();
+                }
+            });
+
+            $("form").on("submit", function (e) {
+                e.preventDefault();
+                clearValidation();
+
+                const targetId = e.originalEvent.submitter.id;
+                const isDraft = targetId === "btnSaveDraft";
+
+                const isValid = isDraft ? validateDraft() : validatePublish();
+                if (!isValid) return;
+
+                const id = $("#id").val();
+                const data = buildPayload(isDraft);
+
+                $.ajax({
+                    url: `/contributor/news/${id}`,
+                    method: "PUT",
+                    processData: false,
+                    contentType: false,
+                    data: data,
+                    success: function () {
+                        if (isDraft) {
+                            Swal.fire({
+                                icon: "success",
+                                title: "Saved as Draft!",
+                                text: "Your article has been saved as a draft.",
+                                timer: 2000,
+                                showConfirmButton: false
+                            }).then(() => {
+                                 window.location.href = "/contributor/content";
+                            });
+                        } else {
+                            Swal.fire({
+                                icon: "success",
+                                title: "Article Published!",
+                                text: "Your article has been published successfully.",
+                                timer: 2000,
+                                showConfirmButton: false
+                            }).then(() => {
+                                 window.location.href = "/contributor/content";
+                            });
+                        }
+                    },
+
+                    error: function (xhr) {
+                        let message = "Unexpected server error.";
+
+                        if (xhr.status === 400 && xhr.responseText) {
+                            message = xhr.responseText;
+                        } else if (xhr.status === 500) {
+                            message = xhr.responseText || "Unexpected server error.";
+                        }
+
+                        Swal.fire({
+                            icon: "error",
+                            title: isDraft ? "Failed to save draft" : "Failed to publish article",
+                            text: message
+                        })
+                    }
+                })
+            })
+        </script>
+    </th:block>
+</body>
+</html>
