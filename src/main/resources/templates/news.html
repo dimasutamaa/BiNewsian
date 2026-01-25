@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout" layout:decorate="~{layout/base}">
+<head>
+    <title>News</title>
+</head>
+<body>
+<div layout:fragment="content">
+    <div class="container pt-4 pb-5 news">
+        <!-- Breadcrumb -->
+        <nav aria-label="breadcrumb" class="mb-2">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a th:href="@{/dashboard}" class="text-decoration-none">Home</a></li>
+                <li class="breadcrumb-item active">News</li>
+            </ol>
+        </nav>
+
+        <h3>News & Updates</h3>
+        <p style="color: #6b7280;">The latest information about campus activities, achievements and announcements.</p>
+
+        <!-- Search -->
+        <div class="d-flex gap-2 mb-3 mt-4">
+            <div class="search-wrapper">
+                <i class="bi bi-search"></i>
+                <input type="text" id="searchInput" class="form-control" placeholder="Search for news, announcements, or events...">
+            </div>
+        </div>
+
+        <!-- Category Filter -->
+        <div class="d-flex gap-2 mb-4 flex-wrap" th:if="${categories != null and !categories.isEmpty()}">
+            <a th:href="@{/news}"
+               class="category-btn"
+               th:classappend="${category == null or category == ''} ? 'active' : ''">
+                All
+            </a>
+            <a th:each="cat : ${categories}"
+               th:href="@{/news(category=${cat.name})}"
+               class="category-btn"
+               th:classappend="${category == cat.name} ? 'active' : ''"
+               th:text="${cat.name}">
+                Category Name
+            </a>
+        </div>
+
+        <!-- News Grid -->
+        <div class="row g-3" id="newsGrid">
+            <th:block th:if="${news != null and !news.isEmpty()}">
+                <div class="col-12 col-md-6 col-lg-4" th:each="newsItem : ${news}">
+                    <div class="news-card" th:onclick="'window.location.href=\'/news/' + ${newsItem.id} + '\''">
+                        <!-- News Image -->
+                        <div class="news-image">
+                            <img th:src="${newsItem.featuredImageUrl}"
+                                 th:alt="${newsItem.title}"
+                                 onerror="this.src='/images/default-news.jpg'">
+                            <span class="news-category-badge" th:text="${newsItem.category.name}"></span>
+                        </div>
+
+                        <!-- News Content -->
+                        <div class="news-content">
+                            <h5 class="news-title" th:text="${newsItem.title}"></h5>
+                            <p class="news-description"
+                               th:text="${#strings.length(newsItem.summary) > 120 ? #strings.substring(newsItem.summary, 0, 120) + '...' : newsItem.summary}">
+                            </p>
+
+                            <!-- News Meta -->
+                            <div class="news-meta">
+                                <div class="meta-item">
+                                    <i class="bi bi-calendar"></i>
+                                    <span th:text="${#temporals.format(newsItem.publishedAt, 'd MMMM yyyy')}"></span>
+                                </div>
+                                <div class="meta-item">
+                                    <i class="bi bi-person"></i>
+                                    <span th:text="${newsItem.createdBy.username}"></span>
+                                </div>
+                            </div>
+
+                            <!-- Tags -->
+                            <div class="news-tags">
+                                <span class="tag" th:text="${newsItem.category.name}"></span>
+                            </div>
+
+                            <!-- Read More -->
+                            <a th:href="@{'/news/' + ${newsItem.id}}" class="read-more-link">
+                                Read More
+                                <i class="bi bi-arrow-right"></i>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </th:block>
+
+            <div th:if="${news == null or news.isEmpty()}" class="col-12">
+                <div class="no-activities">
+                    <i class="bi bi-inbox" style="font-size: 3rem; color: #d1d5db;"></i>
+                    <p class="mt-3 mb-0">No news found</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Pagination -->
+        <div class="d-flex justify-content-between align-items-center mt-3" th:if="${news != null and !news.isEmpty()}">
+            <p class="text-muted mb-0">
+                Showing <span id="startCount" th:text="${currentPage * 9 + 1}">-</span> to
+                <span id="endCount" th:text="${currentPage * 9 + news.size()}">-</span> of
+                <span th:text="${totalNews}">-</span> news
+            </p>
+
+            <nav aria-label="News pagination" th:if="${totalPages > 1}">
+                <ul class="pagination mb-0">
+                    <li class="page-item" th:classappend="${currentPage == 0} ? 'disabled'">
+                        <a class="page-link" th:href="@{/news(page=${currentPage - 1})}" tabindex="-1">&laquo;</a>
+                    </li>
+
+                    <th:block th:each="i : ${#numbers.sequence(0, totalPages - 1)}">
+                        <li class="page-item"
+                            th:if="${i == 0 or i == totalPages - 1 or (i >= currentPage - 1 and i <= currentPage + 1)}"
+                            th:classappend="${i == currentPage} ? 'active'">
+                            <a class="page-link" th:href="@{/news(page=${i})}" th:text="${i + 1}"></a>
+                        </li>
+                        <li class="page-item disabled"
+                            th:if="${(i == 1 and currentPage > 2) or (i == totalPages - 2 and currentPage < totalPages - 3)}">
+                            <span class="page-link">...</span>
+                        </li>
+                    </th:block>
+
+                    <li class="page-item" th:classappend="${currentPage == totalPages - 1} ? 'disabled'">
+                        <a class="page-link" th:href="@{/news(page=${currentPage + 1})}">&raquo;</a>
+                    </li>
+                </ul>
+            </nav>
+        </div>
+    </div>
+</div>
+
+<th:block layout:fragment="scripts">
+    <script>
+        $('#searchInput').on('input', function () {
+            const searchTerm = $(this).val().toLowerCase();
+            const cards = $('.col-12');
+            let visibleCount = 0;
+            let firstVisible = 0;
+            let lastVisible = 0;
+
+            cards.each(function (index) {
+                const title = $(this).find('.news-title');
+
+                if (title.length) {
+                    const titleText = title.text().toLowerCase();
+
+                    if (titleText.includes(searchTerm)) {
+                        $(this).show();
+                        visibleCount++;
+
+                        if (firstVisible === 0) {
+                            firstVisible = index + 1;
+                        }
+                        lastVisible = index + 1;
+                    } else {
+                        $(this).hide();
+                    }
+                }
+            })
+
+            if (visibleCount > 0) {
+                $('#startCount').text(firstVisible);
+                $('#endCount').text(lastVisible);
+            } else {
+                $('#startCount').text('0');
+                $('#endCount').text('0');
+            }
+        })
+
+        $(document).on('keydown', function(e) {
+            if (e.key === 'Escape') {
+                closeFilter();
+            }
+        });
+    </script>
+</th:block>
+</body>
+</html>
