@@ -45,4 +45,6 @@ public interface ActivityRepository extends JpaRepository<Activity, Long> {
             @Param("dateTo") LocalDate dateTo,
             Pageable pageable
     );
+
+    List<Activity> findByCreatedBy_IdOrderByCreatedAtDesc(Long userId);
 }
