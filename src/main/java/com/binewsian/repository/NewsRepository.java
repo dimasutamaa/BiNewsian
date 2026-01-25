@@ -28,4 +28,6 @@ public interface NewsRepository extends JpaRepository<News, Long> {
             @Param("categoryId") Long categoryId,
             Pageable pageable
     );
+  
+    List<News> findByCreatedBy_IdOrderByCreatedAtDesc(Long id);
 }
