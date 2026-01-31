@@ -1,0 +1,20 @@
+<div th:fragment="newsItem">
+    <a th:href="@{/news/{id}(id=${item.id})}" target="_blank" class="item-content" style="text-decoration: none;">
+        <img th:if="${item.featuredImageUrl != null}" th:src="${item.featuredImageUrl}" alt="News" class="item-image">
+        <div class="item-main">
+            <h6 class="item-title" th:text="${item.title}">News Title</h6>
+            <p class="item-description" th:text="${item.summary}">Summary</p>
+            <div class="item-meta">
+                <span class="meta-item" th:if="${item.category != null}">
+                    <i class="bi bi-tag"></i>
+                    <span th:text="${item.category.name}"></span>
+                </span>
+            </div>
+        </div>
+        <div class="item-actions">
+            <button class="btn-action btn-remove remove-btn" th:data-id="${item.id}" th:data-type="'NEWS'">
+                <i class="bi bi-bookmark-fill"></i>
+            </button>
+        </div>
+    </a>
+</div>
