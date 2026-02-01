@@ -14,6 +14,10 @@ supabase.s3.access-key=YOUR_SUPABASE_ACCESS_KEY
 supabase.s3.secret-key=YOUR_SUPABASE_SECRET_KEY
 supabase.s3.bucket-name=YOUR_SUPABASE_BUCKET_NAME
 
+# Email Configuration
+spring.mail.username=YOUR_USERNAME
+spring.mail.password=YOUR_APP_PASSWORD
+
 # JPA Configuration
 spring.jpa.hibernate.ddl-auto=update
 

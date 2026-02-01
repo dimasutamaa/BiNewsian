@@ -1,0 +1,31 @@
+<div th:fragment="activityItem">
+    <a th:href="@{/activity/{id}(id=${activity.id})}" target="_blank" class="item-content" style="text-decoration: none;">
+        <div class="item-main">
+            <h6 class="item-title" th:text="${activity.title}">Activity Title</h6>
+            <div class="item-meta">
+                <span class="meta-item">
+                    <i class="bi bi-calendar"></i>
+                    <span th:text="${#temporals.format(activity.activityDate, 'MMM dd, yyyy')}"></span>
+                </span>
+                <span class="meta-item">
+                    <i class="bi bi-clock"></i>
+                    <span th:text="${#temporals.format(activity.timeStart, 'HH:mm')} + ' - ' + ${#temporals.format(activity.timeEnd, 'HH:mm')}"></span>
+                </span>
+                <span class="meta-item" th:if="${activity.location != null}">
+                    <i class="bi bi-geo-alt"></i>
+                    <span th:text="${activity.location}"></span>
+                </span>
+            </div>
+            <div class="item-tags">
+                <span class="tag tag-type" th:text="${activity.type.displayName}">Type</span>
+                <span th:if="${#temporals.createNow().isAfter(activity.registrationDeadline)}" class="tag tag-closed">Closed</span>
+                <span th:unless="${#temporals.createNow().isAfter(activity.registrationDeadline)}" class="tag tag-available">Available</span>
+            </div>
+        </div>
+        <div class="item-actions">
+            <button class="btn-action btn-remove remove-btn" th:data-id="${activity.id}" th:data-type="'ACTIVITY'">
+                <i class="bi bi-bookmark-fill"></i>
+            </button>
+        </div>
+    </a>
+</div>
