@@ -126,13 +126,14 @@ public class HomeController {
         model.addAttribute("isBookmarked", bookmarkService.isBookmarked(user, "ACTIVITY", id));
 
         return "activity-detail";
-    }  
+    }
 
     @GetMapping("/news")
     @RequireRole({Role.USER, Role.CONTRIBUTOR, Role.ADMIN})
     public String showNewsPage(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "9") int size,
+            @RequestParam(required = false) String search,
             @RequestParam(required = false) String category,
             HttpSession session,
             Model model
@@ -145,6 +146,10 @@ public class HomeController {
 
         NewsFilterDto filterDto = new NewsFilterDto();
 
+        if (search != null && !search.trim().isEmpty()) {
+            filterDto.setSearch(search.trim());
+        }
+
         if (category != null && !category.isEmpty()) {
             filterDto.setCategory(category);
         }
@@ -156,6 +161,7 @@ public class HomeController {
         model.addAttribute("totalPages", newsPage.getTotalPages());
         model.addAttribute("totalNews", newsPage.getTotalElements());
 
+        model.addAttribute("search", search);
         model.addAttribute("category", category);
 
         return "news";

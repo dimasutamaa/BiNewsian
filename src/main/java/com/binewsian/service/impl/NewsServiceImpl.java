@@ -151,12 +151,12 @@ public class NewsServiceImpl implements NewsService {
     }
 
     @Override
-    public Page<News> getFilteredNews(NewsFilterDto filterDto, int page, int size) {        
+    public Page<News> getFilteredNews(NewsFilterDto filterDto, int page, int size) {
         Pageable pageable = PageRequest.of(page, size, Sort.Direction.DESC, "publishedAt");
 
         String categoryName = filterDto.getCategory();
         Long categoryId = null;
-        
+
         if (categoryName != null && !categoryName.isEmpty()) {
             Optional<Category> categoryOpt = categoryRepository.findByNameIgnoreCase(categoryName);
 
@@ -167,9 +167,15 @@ public class NewsServiceImpl implements NewsService {
             categoryId = categoryOpt.get().getId();
         }
 
+        String searchTerm = null;
+        if (filterDto.getSearch() != null && !filterDto.getSearch().trim().isEmpty()) {
+            searchTerm = "%" + filterDto.getSearch().trim().toLowerCase() + "%";
+        }
+
         return newsRepository.findNewsWithFilters(
                 NewsStatus.PUBLISHED,
                 categoryId,
+                searchTerm,
                 pageable
         );
     }
