@@ -80,10 +80,6 @@ public class ActivityServiceImpl implements ActivityService {
             throw new BiNewsianException("You are not authorized to edit this activity.");
         }
 
-        if (activity.getStatus() == ActivityStatus.PUBLISHED) {
-            throw new BiNewsianException("Published activity cannot be edited.");
-        }
-
         boolean isDraft = request.isDraft();
 
         if (isDraft) {

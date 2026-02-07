@@ -129,7 +129,7 @@
 
                             <!-- Activity List -->
                             <div id="activityList" th:if="${!#lists.isEmpty(activities)}">
-                                <div class="news-item" th:each="activity : ${activities}" th:attr="data-name=${activity.title}">
+                                <div class="activity-item" th:each="activity : ${activities}" th:attr="data-name=${activity.title}, data-url=@{/activity/{id}(id=${activity.id})}">
                                     <div th:replace="fragments/panel-activity-item :: activityItem"></div>
                                 </div>
                             </div>
@@ -186,12 +186,16 @@
 
     <th:block layout:fragment="scripts">
         <script>
-            $(document).on('click', '.news-item', function (e) {
+            $(document).on('click', '.news-item, .activity-item', function (e) {
                 if ($(e.target).closest('a, button, .dropdown, .ellipsis-btn').length) {
                     return;
                 }
 
+                console.log('clicked item');
+
                 const url = $(this).data('url');
+                console.log('Navigating to URL:', url);
+
                 if (url) {
                     window.location.href = url;
                 }
@@ -344,7 +348,7 @@
                 `;
 
                 return `
-                    <div class="news-item" data-name="${item.title}">
+                    <div class="news-item" data-name="${item.title} data-url="/activity/${item.id}"">
                         <div class="d-flex justify-content-between align-items-start">
                             <div>
                                 <h6 class="mb-2">${item.title}</h6>
