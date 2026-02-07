@@ -140,7 +140,7 @@
 
                             <!-- Activity List -->
                             <div id="activityList" th:if="${!#lists.isEmpty(activities)}">
-                                <div class="news-item" th:each="activity : ${activities}" th:attr="data-name=${activity.title}">
+                                <div class="news-item" th:each="activity : ${activities}" th:attr="data-name=${activity.title}, data-url=@{/activity/{id}(id=${activity.id})}">
                                     <div th:replace="fragments/panel-activity-item :: activityItem"></div>
                                 </div>
                             </div>
