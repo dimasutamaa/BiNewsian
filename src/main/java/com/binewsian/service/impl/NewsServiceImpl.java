@@ -119,8 +119,7 @@ public class NewsServiceImpl implements NewsService {
 
     @Override
     public News findById(Long id) throws BiNewsianException {
-        return newsRepository.findById(id)
-                .orElseThrow(() -> new BiNewsianException(AppConstant.NEWS_NOT_FOUND));
+        return newsRepository.findById(id).orElse(null);
     }
 
     @Override

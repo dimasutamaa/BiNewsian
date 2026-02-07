@@ -119,8 +119,7 @@ public class ActivityServiceImpl implements ActivityService {
 
     @Override
     public Activity findById(Long id) throws BiNewsianException {
-        return activityRepository.findById(id)
-                .orElseThrow(() -> new BiNewsianException(AppConstant.ACTIVITY_NOT_FOUND));
+        return activityRepository.findById(id).orElse(null);
     }
 
     @Override
@@ -189,12 +188,6 @@ public class ActivityServiceImpl implements ActivityService {
                 filterDto.getDateTo(),
                 pageable
         );
-    }
-
-    @Override
-    public Activity getActivityById(Long id) throws BiNewsianException {
-        return activityRepository.findByIdAndStatus(id, ActivityStatus.PUBLISHED)
-                .orElseThrow(() -> new BiNewsianException(AppConstant.ACTIVITY_NOT_FOUND));
     }
 
     private void notifyUsers(Activity activity, String appUrl) throws BiNewsianException {
