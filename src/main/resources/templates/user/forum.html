@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout" layout:decorate="~{layout/base}">
+<head>
+    <title>Forum</title>
+</head>
+
+<body>
+<div layout:fragment="content">
+    <div class="container pt-4 pb-5 forum">
+        <!-- Breadcrumb -->
+        <nav aria-label="breadcrumb" class="mb-2">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a th:href="@{/dashboard}" class="text-decoration-none">Home</a></li>
+                <li class="breadcrumb-item active">Forum</li>
+            </ol>
+        </nav>
+
+        <h3>Forum Discussion</h3>
+        <p style="color:#6b7280;">Share experiences and ask questions about campus activities.</p>
+
+        <!-- Thread List -->
+        <div class="mt-4">
+            <div th:if="${threads == null or threads.isEmpty()}" class="no-forums">
+                <i class="bi bi-inbox" style="font-size: 3rem; color: #d1d5db;"></i>
+                <p class="mt-3 mb-0">No threads yet</p>
+            </div>
+
+            <div th:if="${threads != null and !threads.isEmpty()}">
+                <div class="forum-thread-card position-relative" th:each="thread : ${threads}">
+                    <div class="d-flex flex-column gap-2">
+                        <div>
+                            <h5 class="mb-1" style="color:#111827;" th:text="${thread.title}">Title</h5>
+
+                            <div style="color:#6b7280; font-size:0.875rem;">
+                                <span th:text="${thread.createdBy != null ? thread.createdBy.username : 'User'}">User</span>
+                                <span> • </span>
+                                <span th:text="${#temporals.format(thread.createdAt, 'd MMM yyyy')}">date</span>
+                            </div>
+
+                            <p class="mb-0 mt-2" style="color:#374151;" th:text="${#strings.abbreviate(thread.content, 150)}">
+                                Content preview...
+                            </p>
+                        </div>
+
+                        <div class="forum-thread-footer">
+                            <div class="forum-thread-meta">
+                                <span class="meta-item">
+                                    <i class="bi bi-chat-left-text"></i>
+                                    <span th:text="${replyCounts[thread.id] != null ? replyCounts[thread.id] : 0}">0</span> Replies
+                                </span>
+                            </div>
+
+                            <div class="thread-actions">
+                                <button type="button"
+                                        class="thread-action-btn btn-upvote"
+                                        th:classappend="${userVotes[thread.id] == T(com.binewsian.enums.VoteType).UP} ? 'active' : ''"
+                                        th:data-thread-id="${thread.id}"
+                                        aria-label="Upvote">
+                                    <i class="bi bi-hand-thumbs-up"></i>
+                                    <span class="count" th:text="${upvoteCounts[thread.id] != null ? upvoteCounts[thread.id] : 0}">0</span>
+                                </button>
+                                <button type="button"
+                                        class="thread-action-btn btn-downvote"
+                                        th:classappend="${userVotes[thread.id] == T(com.binewsian.enums.VoteType).DOWN} ? 'active' : ''"
+                                        th:data-thread-id="${thread.id}"
+                                        aria-label="Downvote">
+                                    <i class="bi bi-hand-thumbs-down"></i>
+                                    <span class="count" th:text="${downvoteCounts[thread.id] != null ? downvoteCounts[thread.id] : 0}">0</span>
+                                </button>
+                                <button th:if="${user.role.name == 'USER'}" type="button" class="thread-action-btn btn-save" th:data-thread-id="${thread.id}">
+                                    <i class="bi" th:classappend="${savedThreadIds.contains(thread.id)} ? 'bi-bookmark-fill' : 'bi-bookmark'"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Ini bikin seluruh card clickable -->
+                    <a th:href="@{'/forum/' + ${thread.id}}"
+                       class="stretched-link"
+                       aria-label="Open thread"></a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Pagination -->
+        <div class="d-flex justify-content-between align-items-center mt-3" th:if="${threads != null and !threads.isEmpty()}">
+            <p class="text-muted mb-0">
+                Showing <span th:text="${currentPage * pageSize + 1}">-</span> to
+                <span th:text="${currentPage * pageSize + threads.size()}">-</span> of
+                <span th:text="${totalThreads}">-</span> threads
+            </p>
+
+            <nav aria-label="Forum pagination" th:if="${totalPages > 1}">
+                <ul class="pagination mb-0">
+                    <li class="page-item" th:classappend="${currentPage == 0} ? 'disabled'">
+                        <a class="page-link" th:href="@{/forum(page=${currentPage - 1}, size=${pageSize})}" tabindex="-1">&laquo;</a>
+                    </li>
+
+                    <th:block th:each="i : ${#numbers.sequence(0, totalPages - 1)}">
+                        <li class="page-item"
+                            th:if="${i == 0 or i == totalPages - 1 or (i >= currentPage - 1 and i <= currentPage + 1)}"
+                            th:classappend="${i == currentPage} ? 'active'">
+                            <a class="page-link" th:href="@{/forum(page=${i}, size=${pageSize})}" th:text="${i + 1}"></a>
+                        </li>
+                        <li class="page-item disabled"
+                            th:if="${(i == 1 and currentPage > 2) or (i == totalPages - 2 and currentPage < totalPages - 3)}">
+                            <span class="page-link">...</span>
+                        </li>
+                    </th:block>
+
+                    <li class="page-item" th:classappend="${currentPage == totalPages - 1} ? 'disabled'">
+                        <a class="page-link" th:href="@{/forum(page=${currentPage + 1}, size=${pageSize})}">&raquo;</a>
+                    </li>
+                </ul>
+            </nav>
+        </div>
+
+        <!-- Modal + Backdrop -->
+        <div class="forum-modal-backdrop" id="createThreadBackdrop"></div>
+
+        <div class="forum-modal" id="createThreadModal">
+            <div class="forum-modal-header">
+                <h5 class="mb-0">Create Forum</h5>
+                <button type="button" class="forum-modal-close" id="closeCreateThreadBtn">
+                    <i class="bi bi-x-lg"></i>
+                </button>
+            </div>
+
+            <form th:action="@{/forum}" method="post" class="forum-modal-body">
+                <div class="mb-3">
+                    <label class="form-label" style="font-size: 16px; color:#6b7280;">Title</label>
+                    <input class="form-control" name="title" placeholder="Write your title here..." required>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label" style="font-size: 16px; color:#6b7280;">Content</label>
+                    <textarea class="form-control" name="content" rows="6" placeholder="Share your thoughts..." required></textarea>
+                </div>
+
+                <div class="d-flex justify-content-end">
+                    <button class="btn btn-purple px-4" type="submit">Post</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<th:block layout:fragment="scripts">
+    <script>
+        function openCreateThreadModal() {
+            $('#createThreadModal').addClass('show');
+            $('#createThreadBackdrop').addClass('show');
+            $('body').css('overflow', 'hidden');
+        }
+
+        function closeCreateThreadModal() {
+            $('#createThreadModal').removeClass('show');
+            $('#createThreadBackdrop').removeClass('show');
+            $('body').css('overflow', '');
+        }
+
+        $('#openCreateThreadBtn').on('click', openCreateThreadModal);
+        $('#closeCreateThreadBtn').on('click', closeCreateThreadModal);
+        $('#createThreadBackdrop').on('click', closeCreateThreadModal);
+
+        $(document).on('keydown', function(e) {
+            if (e.key === 'Escape') closeCreateThreadModal();
+        });
+
+        function updateVoteUI($card, userVote) {
+            const $up = $card.find('.btn-upvote');
+            const $down = $card.find('.btn-downvote');
+
+            $up.toggleClass('active', userVote === 'UP');
+            $down.toggleClass('active', userVote === 'DOWN');
+        }
+
+        $('.thread-actions').on('click', '.thread-action-btn', function (e) {
+            e.preventDefault();
+            e.stopPropagation();
+        });
+
+        $('.thread-actions').on('click', '.btn-upvote, .btn-downvote', function () {
+            const $btn = $(this);
+            const threadId = $btn.data('thread-id');
+            const type = $btn.hasClass('btn-upvote') ? 'UP' : 'DOWN';
+            const $card = $btn.closest('.forum-thread-card');
+
+            $.post('/forum/' + threadId + '/vote', { type: type })
+                .done(function (res) {
+                    $card.find('.btn-upvote .count').text(res.upvotes);
+                    $card.find('.btn-downvote .count').text(res.downvotes);
+                    updateVoteUI($card, res.userVote);
+                })
+                .fail(function () {
+                    Swal.fire({ icon: 'error', title: 'Error', text: 'Failed to vote.' });
+                });
+        });
+
+        $('.thread-actions').on('click', '.btn-save', function () {
+            const $btn = $(this);
+            const threadId = $btn.data('thread-id');
+
+            $.post('/user/bookmarks/toggle', { contentId: threadId, type: 'THREAD' })
+                .done(function (res) {
+                    const $icon = $btn.find('i');
+                    if (res.saved) {
+                        $icon.removeClass('bi-bookmark').addClass('bi-bookmark-fill');
+                        $('.save-text').text('Saved');
+
+                        Swal.fire({
+                            icon: 'success',
+                            title: 'Saved',
+                            text: 'Forum added to bookmarks',
+                            timer: 1500,
+                            showConfirmButton: false
+                        })
+                    } else {
+                        $icon.removeClass('bi-bookmark-fill').addClass('bi-bookmark');
+                        $('.save-text').text('Save');
+
+                        Swal.fire({
+                            icon: 'info',
+                            title: 'Removed',
+                            text: 'Bookmark removed',
+                            timer: 1500,
+                            showConfirmButton: false
+                        })
+                    }
+                })
+                .fail(function () {
+                    Swal.fire({ icon: 'error', title: 'Error', text: 'Failed to save thread.' });
+                });
+        });
+    </script>
+</th:block>
+</body>
+</html>

@@ -11,5 +11,7 @@ public interface BookmarkService {
     boolean isBookmarked(User user, String type, Long contentId);
     List<Activity> getBookmarkedActivities(User user);
     List<News> getBookmarkedNews(User user);
+    List<ForumThread> getBookmarkedThreads(User user);
+    List<Long> getContentIds(User user, String type);
     int countByUserAndType(User user, String type);
 }

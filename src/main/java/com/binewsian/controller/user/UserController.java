@@ -74,7 +74,7 @@ public class UserController {
 
         long activityCount = bookmarkService.countByUserAndType(user, "ACTIVITY");
         long newsCount = bookmarkService.countByUserAndType(user, "NEWS");
-        long forumCount = bookmarkService.countByUserAndType(user, "FORUM");
+        long forumCount = bookmarkService.countByUserAndType(user, "THREAD");
         long totalCount = activityCount + newsCount + forumCount;
 
         model.addAttribute("user", user);
@@ -94,7 +94,10 @@ public class UserController {
             model.addAttribute("news", news);
         }
 
-//        if ("forums".equals(tab) || "all".equals(tab)) {}
+        if ("forums".equals(tab) || "all".equals(tab)) {
+            List<ForumThread> forums = bookmarkService.getBookmarkedThreads(user);
+            model.addAttribute("forums", forums);
+        }
 
         return "user/bookmarks";
     }
