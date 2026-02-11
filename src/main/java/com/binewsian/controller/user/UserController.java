@@ -5,7 +5,6 @@ import com.binewsian.constant.AppConstant;
 import com.binewsian.enums.Role;
 import com.binewsian.exception.BiNewsianException;
 import com.binewsian.model.Activity;
-import com.binewsian.model.ForumThread;
 import com.binewsian.model.News;
 import com.binewsian.model.User;
 import com.binewsian.service.BookmarkService;
@@ -95,10 +94,7 @@ public class UserController {
             model.addAttribute("news", news);
         }
 
-        if ("forum".equals(tab) || "all".equals(tab)) {
-            List<ForumThread> forums = bookmarkService.getBookmarkedForumThreads(user);
-            model.addAttribute("forums", forums);
-        }
+//        if ("forums".equals(tab) || "all".equals(tab)) {}
 
         return "user/bookmarks";
     }
