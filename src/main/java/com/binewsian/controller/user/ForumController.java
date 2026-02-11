@@ -33,9 +33,6 @@ public class ForumController {
                             Model model,
                             HttpSession session) {
         User user = (User) session.getAttribute("user");
-        if (user == null) {
-            return "redirect:/login";
-        }
 
         var threadPage = forumService.findPaginated(page, size);
         List<ForumThread> threads = threadPage.getContent();
@@ -46,7 +43,7 @@ public class ForumController {
         Map<Long, Long> downvoteCounts = forumService.countVotesByThreadIds(threadIds, VoteType.DOWN);
         Map<Long, VoteType> userVotes = forumService.getUserVotesByThreadIds(user, threadIds);
 
-        Set<Long> savedThreadIds = new HashSet<>(bookmarkService.getBookmarkedForumThreadIds(user));
+        Set<Long> savedThreadIds = new HashSet<>(bookmarkService.getContentIds(user, "THREAD"));
 
         model.addAttribute("threads", threads);
         model.addAttribute("replyCounts", replyCounts);
@@ -68,9 +65,6 @@ public class ForumController {
                                HttpSession session) {
 
         User user = (User) session.getAttribute("user");
-        if (user == null) {
-            return "redirect:/login";
-        }
 
         try {
             forumService.createThread(title, content, user);
@@ -87,40 +81,17 @@ public class ForumController {
                                HttpSession session) {
 
         User user = (User) session.getAttribute("user");
-        if (user == null) {
-            return "redirect:/login";
-        }
 
         try {
             model.addAttribute("thread", forumService.getThreadById(threadId));
-            model.addAttribute("replies", forumService.getRepliesForThread(threadId));
-            model.addAttribute("replyCount", forumService.countReplies(threadId));
             model.addAttribute("upvoteCount", forumService.countVotes(threadId, VoteType.UP));
             model.addAttribute("downvoteCount", forumService.countVotes(threadId, VoteType.DOWN));
             model.addAttribute("userVote", forumService.getUserVote(threadId, user));
-            model.addAttribute("isSaved", bookmarkService.isBookmarked(user, "FORUM", threadId));
+            model.addAttribute("isSaved", bookmarkService.isBookmarked(user, "THREAD", threadId));
             model.addAttribute("user", user);
             return "user/forum-thread";
         } catch (BiNewsianException ex) {
             return "redirect:/forum?error=" + ex.getMessage();
-        }
-    }
-
-    @PostMapping("/{id}/reply")
-    public String addReply(@PathVariable("id") Long threadId,
-                           @RequestParam("content") String content,
-                           HttpSession session) {
-
-        User user = (User) session.getAttribute("user");
-        if (user == null) {
-            return "redirect:/login";
-        }
-
-        try {
-            forumService.addReply(threadId, content, user);
-            return "redirect:/forum/" + threadId;
-        } catch (BiNewsianException ex) {
-            return "redirect:/forum/" + threadId + "?error=" + ex.getMessage();
         }
     }
 
@@ -130,9 +101,6 @@ public class ForumController {
                                         @RequestParam("type") String type,
                                         HttpSession session) {
         User user = (User) session.getAttribute("user");
-        if (user == null) {
-            return ResponseEntity.status(401).body("Unauthorized");
-        }
 
         try {
             VoteType voteType = VoteType.valueOf(type);
@@ -143,18 +111,5 @@ public class ForumController {
         } catch (BiNewsianException ex) {
             return ResponseEntity.badRequest().body(ex.getMessage());
         }
-    }
-
-    @PostMapping("/{id}/bookmark")
-    @ResponseBody
-    public ResponseEntity<?> toggleBookmark(@PathVariable("id") Long threadId,
-                                            HttpSession session) {
-        User user = (User) session.getAttribute("user");
-        if (user == null) {
-            return ResponseEntity.status(401).body("Unauthorized");
-        }
-
-        boolean saved = bookmarkService.toggle(user, "FORUM", threadId);
-        return ResponseEntity.ok(Map.of("saved", saved));
     }
 }

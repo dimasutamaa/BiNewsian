@@ -3,11 +3,13 @@ package com.binewsian.model;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
+import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.UpdateTimestamp;
 
 import java.time.LocalDateTime;
 
-@Setter
 @Getter
+@Setter
 @Entity
 @Table(name = "forum_threads")
 public class ForumThread {
@@ -19,20 +21,19 @@ public class ForumThread {
     @Column(nullable = false, length = 255)
     private String title;
 
-    @Column(nullable = false, columnDefinition = "text")
+    @Column(nullable = false, columnDefinition = "TEXT")
     private String content;
 
-    @Column(name = "created_at", nullable = false)
-    private LocalDateTime createdAt = LocalDateTime.now();
+    @CreationTimestamp
+    @Column(name = "created_at", nullable = false, updatable = false)
+    private LocalDateTime createdAt;
 
+    @UpdateTimestamp
     @Column(name = "updated_at", nullable = false)
-    private LocalDateTime updatedAt = LocalDateTime.now();
+    private LocalDateTime updatedAt;
 
     @ManyToOne(optional = false, fetch = FetchType.LAZY)
-    @JoinColumn(name = "created_by_id", nullable = false)
+    @JoinColumn(name = "created_by_id", nullable = false, updatable = false)
     private User createdBy;
 
-    public void touchUpdatedAt() {
-        this.updatedAt = LocalDateTime.now();
-    }
 }

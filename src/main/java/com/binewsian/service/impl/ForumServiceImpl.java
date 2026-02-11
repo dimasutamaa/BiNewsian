@@ -4,11 +4,9 @@ import com.binewsian.constant.AppConstant;
 import com.binewsian.dto.ForumVoteResponse;
 import com.binewsian.enums.VoteType;
 import com.binewsian.exception.BiNewsianException;
-import com.binewsian.model.ForumReply;
 import com.binewsian.model.ForumThread;
 import com.binewsian.model.ForumThreadVote;
 import com.binewsian.model.User;
-import com.binewsian.repository.ForumReplyRepository;
 import com.binewsian.repository.ForumThreadRepository;
 import com.binewsian.repository.ForumThreadVoteRepository;
 import com.binewsian.service.ForumService;
@@ -20,6 +18,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -30,7 +29,6 @@ import java.util.stream.Collectors;
 public class ForumServiceImpl implements ForumService {
 
     private final ForumThreadRepository forumThreadRepository;
-    private final ForumReplyRepository forumReplyRepository;
     private final ForumThreadVoteRepository forumThreadVoteRepository;
 
     @Override
@@ -62,38 +60,6 @@ public class ForumServiceImpl implements ForumService {
         thread.setUpdatedAt(LocalDateTime.now());
 
         return forumThreadRepository.save(thread);
-    }
-
-    @Override
-    public List<ForumReply> getRepliesForThread(Long threadId) throws BiNewsianException {
-        ForumThread thread = getThreadById(threadId);
-        return forumReplyRepository.findByThreadWithUserOrderByCreatedAtAsc(thread);
-    }
-
-    @Override
-    public ForumReply addReply(Long threadId, String content, User user) throws BiNewsianException {
-        validateUser(user);
-
-        if (content == null || content.trim().isEmpty()) {
-            throw new BiNewsianException("Reply content cannot be empty");
-        }
-
-        ForumThread thread = getThreadById(threadId);
-
-        ForumReply reply = new ForumReply();
-        reply.setThread(thread);
-        reply.setContent(content.trim());
-        reply.setCreatedBy(user);
-        reply.setCreatedAt(LocalDateTime.now());
-        reply.setUpdatedAt(LocalDateTime.now());
-
-        return forumReplyRepository.save(reply);
-    }
-
-    @Override
-    public long countReplies(Long threadId) throws BiNewsianException {
-        ForumThread thread = getThreadById(threadId);
-        return forumReplyRepository.countByThread(thread);
     }
 
     @Override
@@ -148,14 +114,11 @@ public class ForumServiceImpl implements ForumService {
 
     @Override
     public Map<Long, Long> countRepliesByThreadIds(List<Long> threadIds) {
-        if (threadIds == null || threadIds.isEmpty()) {
-            return Map.of();
-        }
-        return forumReplyRepository.countByThreadIds(threadIds)
+        return forumThreadRepository.countByThreadIds(threadIds)
                 .stream()
                 .collect(Collectors.toMap(
-                        row -> (Long) row[0],
-                        row -> (Long) row[1]
+                        row -> ((Number) row[0]).longValue(),
+                        row -> ((Number) row[1]).longValue()
                 ));
     }
 

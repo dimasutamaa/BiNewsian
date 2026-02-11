@@ -1,7 +1,6 @@
 package com.binewsian.service;
 
 import com.binewsian.exception.BiNewsianException;
-import com.binewsian.model.ForumReply;
 import com.binewsian.model.ForumThread;
 import com.binewsian.model.User;
 import com.binewsian.dto.ForumVoteResponse;
@@ -19,12 +18,6 @@ public interface ForumService {
     ForumThread getThreadById(Long threadId) throws BiNewsianException;
 
     ForumThread createThread(String title, String content, User user) throws BiNewsianException;
-
-    List<ForumReply> getRepliesForThread(Long threadId) throws BiNewsianException;
-
-    ForumReply addReply(Long threadId, String content, User user) throws BiNewsianException;
-
-    long countReplies(Long threadId) throws BiNewsianException;
 
     ForumVoteResponse voteThread(Long threadId, User user, VoteType type) throws BiNewsianException;
 

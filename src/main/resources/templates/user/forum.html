@@ -1,7 +1,5 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org"
-      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
-      layout:decorate="~{layout/base}">
+<html xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout" layout:decorate="~{layout/base}">
 <head>
     <title>Forum</title>
 </head>
@@ -22,7 +20,7 @@
 
         <!-- Thread List -->
         <div class="mt-4">
-            <div th:if="${threads == null or threads.isEmpty()}" class="no-activities">
+            <div th:if="${threads == null or threads.isEmpty()}" class="no-forums">
                 <i class="bi bi-inbox" style="font-size: 3rem; color: #d1d5db;"></i>
                 <p class="mt-3 mb-0">No threads yet</p>
             </div>
@@ -39,7 +37,7 @@
                                 <span th:text="${#temporals.format(thread.createdAt, 'd MMM yyyy')}">date</span>
                             </div>
 
-                            <p class="mb-0 mt-2" style="color:#374151;" th:text="${thread.content}">
+                            <p class="mb-0 mt-2" style="color:#374151;" th:text="${#strings.abbreviate(thread.content, 150)}">
                                 Content preview...
                             </p>
                         </div>
@@ -69,11 +67,7 @@
                                     <i class="bi bi-hand-thumbs-down"></i>
                                     <span class="count" th:text="${downvoteCounts[thread.id] != null ? downvoteCounts[thread.id] : 0}">0</span>
                                 </button>
-                                <button type="button"
-                                        class="thread-action-btn btn-save"
-                                        th:data-thread-id="${thread.id}"
-                                        th:data-saved="${savedThreadIds.contains(thread.id)}"
-                                        aria-label="Save">
+                                <button th:if="${user.role.name == 'USER'}" type="button" class="thread-action-btn btn-save" th:data-thread-id="${thread.id}">
                                     <i class="bi" th:classappend="${savedThreadIds.contains(thread.id)} ? 'bi-bookmark-fill' : 'bi-bookmark'"></i>
                                 </button>
                             </div>
@@ -126,7 +120,7 @@
 
         <div class="forum-modal" id="createThreadModal">
             <div class="forum-modal-header">
-                <h6 class="mb-0">Create Forum</h6>
+                <h5 class="mb-0">Create Forum</h5>
                 <button type="button" class="forum-modal-close" id="closeCreateThreadBtn">
                     <i class="bi bi-x-lg"></i>
                 </button>
@@ -134,14 +128,13 @@
 
             <form th:action="@{/forum}" method="post" class="forum-modal-body">
                 <div class="mb-3">
-                    <label class="form-label" style="font-size:0.875rem; color:#6b7280;">Title</label>
+                    <label class="form-label" style="font-size: 16px; color:#6b7280;">Title</label>
                     <input class="form-control" name="title" placeholder="Write your title here..." required>
                 </div>
 
                 <div class="mb-3">
-                    <label class="form-label" style="font-size:0.875rem; color:#6b7280;">Description</label>
-                    <textarea class="form-control" name="content" rows="6"
-                              placeholder="Share your thoughts on this activity..." required></textarea>
+                    <label class="form-label" style="font-size: 16px; color:#6b7280;">Content</label>
+                    <textarea class="form-control" name="content" rows="6" placeholder="Share your thoughts..." required></textarea>
                 </div>
 
                 <div class="d-flex justify-content-end">
@@ -151,20 +144,6 @@
         </div>
     </div>
 </div>
-
-<!-- Floating Action Button (Forum) -->
-<th:block layout:fragment="fab">
-    <button type="button"
-            class="forum-fab"
-            id="openCreateThreadBtn"
-            data-bs-toggle="tooltip"
-            data-bs-title="Create forum"
-            data-bs-placement="left"
-            title="Create forum">
-
-        <i class="bi bi-plus-lg"></i>
-    </button>
-</th:block>
 
 <th:block layout:fragment="scripts">
     <script>
@@ -222,48 +201,36 @@
             const $btn = $(this);
             const threadId = $btn.data('thread-id');
 
-            $.post('/forum/' + threadId + '/bookmark')
+            $.post('/user/bookmarks/toggle', { contentId: threadId, type: 'THREAD' })
                 .done(function (res) {
                     const $icon = $btn.find('i');
                     if (res.saved) {
                         $icon.removeClass('bi-bookmark').addClass('bi-bookmark-fill');
+                        $('.save-text').text('Saved');
+
+                        Swal.fire({
+                            icon: 'success',
+                            title: 'Saved',
+                            text: 'Forum added to bookmarks',
+                            timer: 1500,
+                            showConfirmButton: false
+                        })
                     } else {
                         $icon.removeClass('bi-bookmark-fill').addClass('bi-bookmark');
+                        $('.save-text').text('Save');
+
+                        Swal.fire({
+                            icon: 'info',
+                            title: 'Removed',
+                            text: 'Bookmark removed',
+                            timer: 1500,
+                            showConfirmButton: false
+                        })
                     }
                 })
                 .fail(function () {
                     Swal.fire({ icon: 'error', title: 'Error', text: 'Failed to save thread.' });
                 });
-        });
-
-        // ====== FAB avoid footer (biar ga nabrak footer) ======
-        document.addEventListener('DOMContentLoaded', function () {
-            const footer = document.querySelector('.footer');
-            const main = document.querySelector('main');
-
-            if (!fabStack || !footer || !main) return;
-
-            function adjustFabPosition() {
-                const footerRect = footer.getBoundingClientRect();
-                const fabRect = fabStack.getBoundingClientRect();
-                const windowHeight = window.innerHeight;
-
-                // kalau footer mulai masuk viewport area bawah
-                if (footerRect.top < windowHeight - 12) {
-                    fabStack.classList.add('absolute-position');
-
-                    const mainRect = main.getBoundingClientRect();
-                    const top = footerRect.top - mainRect.top - fabRect.height - 16; // jarak 16px
-                    fabStack.style.top = top + 'px';
-                } else {
-                    fabStack.classList.remove('absolute-position');
-                    fabStack.style.top = '';
-                }
-            }
-
-            window.addEventListener('scroll', adjustFabPosition);
-            window.addEventListener('resize', adjustFabPosition);
-            adjustFabPosition();
         });
     </script>
 </th:block>

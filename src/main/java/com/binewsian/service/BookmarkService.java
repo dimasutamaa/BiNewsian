@@ -13,6 +13,6 @@ public interface BookmarkService {
     List<Activity> getBookmarkedActivities(User user);
     List<News> getBookmarkedNews(User user);
     List<ForumThread> getBookmarkedThreads(User user);
-    List<Long> getBookmarkedForumThreadIds(User user);
+    List<Long> getContentIds(User user, String type);
     int countByUserAndType(User user, String type);
 }

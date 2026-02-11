@@ -62,20 +62,12 @@ public class BookmarkServiceImpl implements BookmarkService {
     }
 
     @Override
-    public List<Long> getBookmarkedForumThreadIds(User user) {
-        return bookmarkRepository
-                .findByUserAndContentTypeOrderByCreatedAtDesc(user, "FORUM")
-                .stream()
-                .map(Bookmark::getContentId)
-                .collect(Collectors.toList());
-    }
-
-    @Override
     public int countByUserAndType(User user, String type) {
         return bookmarkRepository.countByUserAndContentType(user, type);
     }
 
-    private List<Long> getContentIds(User user, String type) {
+    @Override
+    public List<Long> getContentIds(User user, String type) {
         return bookmarkRepository
                 .findByUserAndContentTypeOrderByCreatedAtDesc(user, type)
                 .stream()

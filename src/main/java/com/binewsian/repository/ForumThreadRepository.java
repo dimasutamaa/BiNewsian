@@ -2,6 +2,7 @@ package com.binewsian.repository;
 
 import com.binewsian.model.ForumThread;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.NativeQuery;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
@@ -28,6 +29,14 @@ public interface ForumThreadRepository extends JpaRepository<ForumThread, Long> 
         where t.id = :id
     """)
     Optional<ForumThread> findByIdWithUser(@Param("id") Long id);
+
+    @NativeQuery("SELECT c.content_id, count(*) " +
+            "FROM comments c " +
+            "WHERE c.content_id IN :contentIds " +
+            "AND c.content_type = 'THREAD' " +
+            "AND c.is_deleted = false " +
+            "GROUP BY c.content_id")
+    List<Object[]> countByThreadIds(@Param("contentIds") List<Long> contentIds);
 
     @EntityGraph(attributePaths = {"createdBy"})
     Page<ForumThread> findAll(Pageable pageable);

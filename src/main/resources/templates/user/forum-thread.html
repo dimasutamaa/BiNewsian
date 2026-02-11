@@ -1,9 +1,7 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org"
-      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
-      layout:decorate="~{layout/base}">
+<html xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout" layout:decorate="~{layout/base}">
 <head>
-    <title th:text="'Thread - ' + ${thread.title}">Thread</title>
+    <title th:text="${thread.title}">Thread</title>
 </head>
 
 <body>
@@ -24,7 +22,7 @@
         </div>
 
         <!-- THREAD CARD -->
-        <div class="content-card p-4" style="border-radius:14px;">
+        <div class="content-card p-4" style="border-radius:8px;">
             <h2 class="mb-1" th:text="${thread.title}">Title</h2>
 
             <div class="text-muted" style="font-size:14px;">
@@ -37,62 +35,39 @@
 
             <!-- ACTIONS: VOTE + SAVE -->
             <div class="d-flex gap-2 mt-3 align-items-center">
-                <button type="button"
-                        class="btn btn-sm btn-outline-success"
-                        id="btnUpvote"
-                        th:data-thread-id="${thread.id}">
+                <button type="button" class="btn btn-sm btn-outline-success" id="btnUpvote">
                     <i class="bi bi-hand-thumbs-up"></i>
                     <span id="upvoteCount" th:text="${upvoteCount}">0</span>
                 </button>
 
-                <button type="button"
-                        class="btn btn-sm btn-outline-danger"
-                        id="btnDownvote"
-                        th:data-thread-id="${thread.id}">
+                <button type="button" class="btn btn-sm btn-outline-danger" id="btnDownvote">
                     <i class="bi bi-hand-thumbs-down"></i>
                     <span id="downvoteCount" th:text="${downvoteCount}">0</span>
                 </button>
 
-                <button type="button"
-                        class="btn btn-sm btn-outline-warning ms-auto"
-                        id="btnSave"
-                        th:data-thread-id="${thread.id}">
+                <button th:if="${user.role.name == 'USER'}" type="button" class="btn btn-sm btn-outline-warning ms-auto" id="saveForumBtn">
                     <i class="bi" th:classappend="${isSaved} ? 'bi-bookmark-fill' : 'bi-bookmark'"></i>
-                    <span id="saveText" th:text="${isSaved} ? 'Saved' : 'Save'">Save</span>
+                    <span class="save-text" th:text="${isSaved} ? 'Saved' : 'Save'">Save</span>
                 </button>
             </div>
         </div>
 
-        <!-- COMMENTS SECTION (replaces REPLIES + REPLY FORM) -->
+        <!-- Comment Section -->
         <div class="comments-section mt-4">
-            <h4 class="mb-2">Comments</h4>
-
+            <h2>Comments</h2>
             <div id="comments-container"></div>
-
-            <div class="text-center mt-3">
-                <button id="load-more-comments"
-                        class="btn btn-load-more"
-                        onclick="loadComments()"
-                        style="display:none;">
+            <div class="text-center mt-4">
+                <button id="load-more-comments" class="btn btn-load-more" onclick="loadComments()" style="display:none;">
                     Load more comments...
                 </button>
             </div>
-
-            <div class="content-card p-3 mt-3" style="border-radius:14px;">
-                <h6 class="mb-2">Write a Comment</h6>
+            <div class="comment-form">
+                <h3>Write a Comment</h3>
                 <form id="comment-form">
-            <textarea class="form-control"
-                      id="comment-content"
-                      name="content"
-                      placeholder="Write your comment..."
-                      rows="4"
-                      required></textarea>
-
-                    <div class="d-flex justify-content-end mt-2">
-                        <button class="btn-send" type="submit" id="btnComment" disabled>
-                            <i class="bi bi-send-fill"></i> Send
-                        </button>
-                    </div>
+                    <textarea class="comment-input" id="comment-content" name="content" placeholder="Share your thoughts on this thread..." required></textarea>
+                    <button type="submit" class="btn-submit" id="btnComment" disabled>
+                        <i class="bi bi-send-fill me-2"></i> Send
+                    </button>
                 </form>
             </div>
         </div>
@@ -113,10 +88,7 @@
         })
 
         $(function () {
-            const threadId = $('#btnUpvote').data('thread-id');
-
             function setVoteUI(userVote) {
-                // optional: kasih highlight sederhana
                 $('#btnUpvote').toggleClass('btn-success', userVote === 'UP')
                                .toggleClass('btn-outline-success', userVote !== 'UP');
 
@@ -127,7 +99,7 @@
             setVoteUI(initialUserVote);
 
             $('#btnUpvote').on('click', function () {
-                $.post('/forum/' + threadId + '/vote', { type: 'UP' })
+                $.post('/forum/' + contentId + '/vote', { type: 'UP' })
                     .done(function (res) {
                         $('#upvoteCount').text(res.upvotes);
                         $('#downvoteCount').text(res.downvotes);
@@ -139,7 +111,7 @@
             });
 
             $('#btnDownvote').on('click', function () {
-                $.post('/forum/' + threadId + '/vote', { type: 'DOWN' })
+                $.post('/forum/' + contentId + '/vote', { type: 'DOWN' })
                     .done(function (res) {
                         $('#upvoteCount').text(res.upvotes);
                         $('#downvoteCount').text(res.downvotes);
@@ -150,16 +122,32 @@
                     });
             });
 
-            $('#btnSave').on('click', function () {
-                $.post('/forum/' + threadId + '/bookmark')
+            $('#saveForumBtn').on('click', function () {
+                $.post('/user/bookmarks/toggle', { contentId: contentId, type: contentType })
                     .done(function (res) {
-                        const $icon = $('#btnSave i');
+                        const $icon = $('#saveForumBtn i');
                         if (res.saved) {
                             $icon.removeClass('bi-bookmark').addClass('bi-bookmark-fill');
-                            $('#saveText').text('Saved');
+                            $('.save-text').text('Saved');
+
+                            Swal.fire({
+                                icon: 'success',
+                                title: 'Saved',
+                                text: 'Forum added to bookmarks',
+                                timer: 1500,
+                                showConfirmButton: false
+                            })
                         } else {
                             $icon.removeClass('bi-bookmark-fill').addClass('bi-bookmark');
-                            $('#saveText').text('Save');
+                            $('.save-text').text('Save');
+
+                            Swal.fire({
+                                icon: 'info',
+                                title: 'Removed',
+                                text: 'Bookmark removed',
+                                timer: 1500,
+                                showConfirmButton: false
+                            })
                         }
                     })
                     .fail(function () {

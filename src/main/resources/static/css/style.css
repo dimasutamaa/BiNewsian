@@ -259,6 +259,13 @@ body {
 .contributor-panel-btn { background: var(--secondary-color) }
 .admin-panel-btn { background: var(--primary-color) }
 
+.create-forum-btn {
+    background: #16a34a;
+    outline: none !important;
+    box-shadow: none !important;
+    border: none !important;
+}
+
 .fixed-header {
     position: fixed;
     top: 0;
@@ -807,7 +814,7 @@ body {
 
 .btn-submit {
     align-self: flex-end;
-    padding: 0.75rem 1.875rem;
+    padding: 0.6rem 1.3rem;
     background: var(--primary-gradient);
     color: white;
     border: none;
@@ -1416,7 +1423,8 @@ body {
 }
 
 .activity .no-activities,
-.news .no-news {
+.news .no-news,
+.forum .no-forums {
     text-align: center;
     padding: 3rem 1rem;
     color: #6b7280;
@@ -2239,23 +2247,17 @@ body {
 
 .forum .forum-thread-card {
     background: #ffffff;
-    border-radius: 12px;
+    border-radius: 8px;
     padding: 16px 18px;
     box-shadow: 0 6px 20px rgba(18, 38, 63, .10);
     margin-bottom: 12px;
-
-    transition: transform .18s ease, box-shadow .18s ease;
     cursor: pointer;
 }
 
 
 .forum .forum-thread-card:hover {
-    transform: translateY(-3px);
+    background: #f3f4f6;
     box-shadow: 0 14px 35px rgba(18, 38, 63, .16);
-}
-
-.forum .forum-thread-card:active {
-    transform: translateY(-1px);
 }
 
 .forum .forum-thread-card .thread-actions {
@@ -2370,61 +2372,6 @@ body {
 /* =========================
    FAB STACK (Forum + Panel)
    ========================= */
-.fab-stack{
-    position: fixed;
-    right: 26px;
-    bottom: 26px;
-    z-index: 1200;
-    display: flex;
-    flex-direction: column;
-    gap: 14px;
-    align-items: flex-end;
-}
-
-.fab-stack.absolute-position{
-    position: absolute;
-    bottom: auto;
-}
-
-.fab-stack > a.fixed-button,
-.fab-stack > button.forum-fab{
-    position: static !important;
-}
-
-.fab-stack > a.fixed-button{
-    width: 54px;
-    height: 54px;
-    padding: 0;
-    display:flex;
-    align-items:center;
-    justify-content:center;
-    box-shadow: 0 10px 25px rgba(0,0,0,0.20);
-}
-
-.fab-stack > button.forum-fab{
-    width: 54px;
-    height: 54px;
-    border-radius: 999px;
-    border: none;
-    background: #16a34a;
-    color: #ffffff;
-    box-shadow: 0 10px 25px rgba(0,0,0,0.20);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    cursor: pointer;
-    transition: transform .18s ease, box-shadow .18s ease;
-}
-
-.fab-stack > button.forum-fab:hover{
-    transform: translateY(-3px);
-    box-shadow: 0 16px 40px rgba(0,0,0,0.25);
-}
-
-.fab-stack > button.forum-fab:active{
-    transform: translateY(-1px);
-}
-
 .forum-modal-backdrop {
     position: fixed;
     inset: 0;
