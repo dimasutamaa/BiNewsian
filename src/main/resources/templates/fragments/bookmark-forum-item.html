@@ -1,0 +1,23 @@
+<div th:fragment="forumItem">
+    <a th:href="@{/forum/{id}(id=${item.id})}" class="item-content" style="text-decoration: none;">
+        <div class="item-main">
+            <h6 class="item-title" th:text="${item.title}">Forum Title</h6>
+            <p class="item-description" th:text="${item.content}">Forum content</p>
+            <div class="item-meta">
+                <span class="meta-item">
+                    <i class="bi bi-person"></i>
+                    <span th:text="${item.createdBy != null ? item.createdBy.username : 'User'}">User</span>
+                </span>
+                <span class="meta-item">
+                    <i class="bi bi-calendar-event"></i>
+                    <span th:text="${#temporals.format(item.createdAt, 'd MMM yyyy')}">date</span>
+                </span>
+            </div>
+        </div>
+        <div class="item-actions">
+            <button class="btn-action btn-remove remove-btn" th:data-id="${item.id}" th:data-type="'FORUM'">
+                <i class="bi bi-bookmark-fill"></i>
+            </button>
+        </div>
+    </a>
+</div>
