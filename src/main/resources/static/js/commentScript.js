@@ -176,7 +176,7 @@ function createEditableContent(content, id, type, isDeleted = false) {
 
     return `
         <div class="comment-text-container">
-            <p class="${textClass}">${displayContent}</p>
+            <p class="${textClass}" style="white-space: pre-line">${displayContent}</p>
 
             ${!isDeleted ? `
                 <div class="comment-edit-form" style="display:none;">
