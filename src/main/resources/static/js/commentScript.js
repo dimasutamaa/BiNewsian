@@ -66,7 +66,7 @@ function createReplyHtml(reply, parentId) {
     const avatar = reply.avatarInitials;
     const avatarColor = reply.avatarColor;
     const date = formatDate(reply.createdAt);
-    const isEdited = reply.createdAt != reply.updatedAt;
+    const isEdited = reply.createdAt.getTime() !== reply.updatedAt.getTime();
     const isOwner = reply.userId === userId;
     const isAdmin = userRole === 'ADMIN';
     const canReport = userRole === 'USER' && !isOwner && !reply.deleted;
@@ -98,7 +98,7 @@ function createCommentHtml(comment) {
     const avatar = comment.avatarInitials;
     const avatarColor = comment.avatarColor;
     const date = formatDate(comment.createdAt);
-    const isEdited = !isDeleted && (comment.createdAt != comment.updatedAt);
+    const isEdited = !isDeleted && (comment.createdAt.getTime() !== comment.updatedAt.getTime());
     const isOwner = !isDeleted && (comment.userId === userId);
     const isAdmin = userRole === 'ADMIN';
     const canReport = userRole === 'USER' && !isOwner && !isDeleted;
