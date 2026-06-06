@@ -15,7 +15,7 @@
         </nav>
 
         <h3>Activities Available</h3>
-        <p style="color: #6b7280;">Find activities to earn SAT points and Community Service hours.</p>
+        <p style="color: #6b7280;">Explore student events, workshops, and volunteer activities.</p>
 
         <!-- Search and Filter -->
         <form id="searchForm" th:action="@{/activity}" method="get" class="d-flex gap-2 mb-3 mt-4">
@@ -72,15 +72,10 @@
                             <span th:text="${activity.quota} + ' Participant'">-</span>
                         </div>
 
-                        <div class="activity-footer">
-                            <span th:if="${activity.type.name() == 'STUDENT_ACTIVITY_TRANSCRIPT'}" class="sat-points">
-                                <i class="bi bi-star-fill"></i>
-                                <span th:text="${activity.rewardAmount} + ' SAT'">-</span>
-                            </span>
-
-                            <span th:if="${activity.type.name() == 'COMMUNITY_SERVICE'}" class="hours">
-                                <i class="bi bi-clock"></i>
-                                <span th:text="${activity.rewardAmount} + ' Hours'">-</span>
+                        <div class="activity-info">
+                            <span>
+                                <i class="bi bi-tag"></i>
+                                <span th:text="${activity.type.displayName}">-</span>
                             </span>
                         </div>
                     </div>
@@ -181,12 +176,9 @@
             if ($('#location-onsite').is(':checked')) {
                 filters.location.push('onsite');
             }
-            if ($('#type-sat').is(':checked')) {
-                filters.type.push('STUDENT_ACTIVITY_TRANSCRIPT');
-            }
-            if ($('#type-cs').is(':checked')) {
-                filters.type.push('COMMUNITY_SERVICE');
-            }
+            $('input[name="type"]:checked').each(function () {
+                filters.type.push($(this).val());
+            })
 
             // Build query parameters
             const params = new URLSearchParams();

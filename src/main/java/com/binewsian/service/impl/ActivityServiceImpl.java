@@ -54,7 +54,6 @@ public class ActivityServiceImpl implements ActivityService {
         activity.setTitle(request.title());
         activity.setType(request.activityType());
         activity.setQuota(request.quota());
-        activity.setRewardAmount(request.rewardAmount());
         activity.setRegistrationLink(request.registrationLink());
         activity.setLocation(request.location());
         activity.setTimeStart(request.timeStart());
@@ -93,7 +92,6 @@ public class ActivityServiceImpl implements ActivityService {
         activity.setTitle(request.title());
         activity.setType(request.activityType());
         activity.setQuota(request.quota());
-        activity.setRewardAmount(request.rewardAmount());
         activity.setRegistrationLink(request.registrationLink());
         activity.setLocation(request.location());
         activity.setTimeStart(request.timeStart());
@@ -178,7 +176,7 @@ public class ActivityServiceImpl implements ActivityService {
         }
 
         boolean hasTypeFilter = filterDto.getType() != null && !filterDto.getType().isEmpty();
-        List<ActivityType> types = hasTypeFilter ? filterDto.getType() : List.of(ActivityType.STUDENT_ACTIVITY_TRANSCRIPT);
+        List<ActivityType> types = hasTypeFilter ? filterDto.getType() : List.of(ActivityType.WEBINAR);
 
         String searchTerm = null;
         if (filterDto.getSearch() != null && !filterDto.getSearch().trim().isEmpty()) {
@@ -222,8 +220,6 @@ public class ActivityServiceImpl implements ActivityService {
             return Sort.by(Sort.Direction.DESC, "activityDate");
         } else if (sortBy.equals("oldest")) {
             return Sort.by(Sort.Direction.ASC, "activityDate");
-        } else if (sortBy.equals("reward")) {
-            return Sort.by(Sort.Direction.DESC, "rewardAmount");
         }
         return Sort.by(Sort.Direction.DESC, "activityDate");
     }
@@ -314,11 +310,11 @@ public class ActivityServiceImpl implements ActivityService {
             throw new BiNewsianException("Quota must be greater than 0");
         }
 
-        Integer rewardAmount = r.rewardAmount();
-
-        if (rewardAmount == null || rewardAmount <= 0) {
-            throw new BiNewsianException("Reward amount must be greater than 0");
-        }
+//        Integer rewardAmount = r.rewardAmount();
+//
+//        if (rewardAmount == null || rewardAmount <= 0) {
+//            throw new BiNewsianException("Reward amount must be greater than 0");
+//        }
 
         validatePublishDateTime(r);
 
