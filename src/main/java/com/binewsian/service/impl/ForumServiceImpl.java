@@ -15,6 +15,7 @@ import com.binewsian.repository.CommentRepository;
 import com.binewsian.repository.ForumThreadRepository;
 import com.binewsian.repository.ForumThreadReportRepository;
 import com.binewsian.repository.ForumThreadVoteRepository;
+import com.binewsian.service.BookmarkService;
 import com.binewsian.service.ForumService;
 import lombok.AllArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -39,6 +40,7 @@ public class ForumServiceImpl implements ForumService {
     private final ForumThreadVoteRepository forumThreadVoteRepository;
     private final CommentRepository commentRepository;
     private final ForumThreadReportRepository forumThreadReportRepository;
+    private final BookmarkService bookmarkService;
 
     @Override
     public List<ForumThread> findAllNewestFirst() {
@@ -149,6 +151,7 @@ public class ForumServiceImpl implements ForumService {
 
         forumThreadVoteRepository.deleteByThread(thread);
         forumThreadReportRepository.deleteByThread(thread);
+        bookmarkService.deleteIfExists(threadId);
         commentRepository.deleteByContentIdAndContentType(threadId, "THREAD");
         forumThreadRepository.delete(thread);
     }

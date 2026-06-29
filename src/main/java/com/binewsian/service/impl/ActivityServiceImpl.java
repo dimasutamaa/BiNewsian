@@ -10,8 +10,10 @@ import com.binewsian.exception.BiNewsianException;
 import com.binewsian.model.Activity;
 import com.binewsian.model.User;
 import com.binewsian.repository.ActivityRepository;
+import com.binewsian.repository.CommentRepository;
 import com.binewsian.repository.UserRepository;
 import com.binewsian.service.ActivityService;
+import com.binewsian.service.BookmarkService;
 import com.binewsian.service.EmailService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -39,6 +41,8 @@ public class ActivityServiceImpl implements ActivityService {
     private final ActivityRepository activityRepository;
     private final UserRepository userRepository;
     private final EmailService emailService;
+    private final BookmarkService bookmarkService;
+    private final CommentRepository commentRepository;
 
     @Override
     public void create(ActivityRequest request, User user, String appUrl) throws BiNewsianException {
@@ -114,6 +118,8 @@ public class ActivityServiceImpl implements ActivityService {
         Activity activity = activityRepository.findById(id)
                 .orElseThrow(() -> new BiNewsianException(AppConstant.ACTIVITY_NOT_FOUND));
 
+        bookmarkService.deleteIfExists(activity.getId());
+        commentRepository.deleteByContentIdAndContentType(activity.getId(), "ACTIVITY");
         activityRepository.delete(activity);
     }
 

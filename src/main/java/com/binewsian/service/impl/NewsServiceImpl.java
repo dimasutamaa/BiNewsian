@@ -10,8 +10,10 @@ import com.binewsian.model.Category;
 import com.binewsian.model.News;
 import com.binewsian.model.User;
 import com.binewsian.repository.CategoryRepository;
+import com.binewsian.repository.CommentRepository;
 import com.binewsian.repository.NewsRepository;
 import com.binewsian.repository.UserRepository;
+import com.binewsian.service.BookmarkService;
 import com.binewsian.service.EmailService;
 import com.binewsian.service.NewsService;
 import com.binewsian.service.StorageService;
@@ -40,6 +42,8 @@ public class NewsServiceImpl implements NewsService {
     private final UserRepository userRepository;
     private final StorageService storageService;
     private final EmailService emailService;
+    private final BookmarkService bookmarkService;
+    private final CommentRepository commentRepository;
 
     @Override
     public void create(NewsRequest request, MultipartFile featuredImage, User user, String appUrl) throws BiNewsianException {
@@ -114,6 +118,8 @@ public class NewsServiceImpl implements NewsService {
             storageService.deleteFile(news.getFeaturedImageKey());
         }
 
+        bookmarkService.deleteIfExists(news.getId());
+        commentRepository.deleteByContentIdAndContentType(news.getId(), "NEWS");
         newsRepository.delete(news);
     }
 
