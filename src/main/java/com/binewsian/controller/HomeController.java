@@ -119,6 +119,9 @@ public class HomeController {
         model.addAttribute("to", to);
         model.addAttribute("sort", sort);
 
+        ActivityType[] types = ActivityType.values();
+        model.addAttribute("types", types);
+
         return "user/activity/list";
     }
 

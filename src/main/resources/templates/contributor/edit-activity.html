@@ -51,19 +51,11 @@
                                     </div>
 
                                     <div class="col-md-3 mb-3">
-                                        <label for="rewardAmount" class="form-label">Point/Hour Amount<span class="text-danger">*</span></label>
-                                        <input type="number" class="form-control" th:field="${activity.rewardAmount}" id="rewardAmount" min="1" placeholder="Enter reward amount">
-                                        <div id="rewardAmountError" class="invalid-feedback"></div>
-                                    </div>
-
-                                    <div class="col-md-3 mb-3">
                                         <label for="registrationLink" class="form-label">Registration Link<span class="text-danger">*</span></label>
                                         <input type="text" class="form-control" th:field="${activity.registrationLink}" id="registrationLink" placeholder="Enter registration link">
                                         <div id="registrationLinkError" class="invalid-feedback"></div>
                                     </div>
-                                </div>
 
-                                <div class="row">
                                     <div class="col-md-3 mb-3">
                                         <label for="location" class="form-label">Location<span class="text-danger">*</span></label>
                                         <select class="form-select" th:field="${activity.location}" id="location">
@@ -73,7 +65,9 @@
                                         </select>
                                         <div id="locationError" class="invalid-feedback"></div>
                                     </div>
+                                </div>
 
+                                <div class="row">
                                     <div class="col-md-3 mb-3">
                                         <label class="form-label">Time<span class="text-danger">*</span></label>
                                         <div class="d-flex align-items-center gap-2">
@@ -294,12 +288,6 @@
                     isValid = false;
                 }
 
-                const rewardAmount = parseInt($("#rewardAmount").val());
-                if (!rewardAmount || isNaN(rewardAmount) || parseInt(rewardAmount) <= 0) {
-                    setInvalid("rewardAmount", "Please enter a valid point/hour amount");
-                    isValid = false;
-                }
-
                 const registrationLink = $("#registrationLink").val();
                 if (!registrationLink || !isValidUrl(normalizeUrl(registrationLink))) {
                     setInvalid("registrationLink", "Please enter a valid registration link");
@@ -346,7 +334,6 @@
                     title: emptyToNull($("#title").val().trim()),
                     activityType: activityTypeValue === "Select a type" ? null : activityTypeValue,
                     quota: safeParseInt($("#quota").val()),
-                    rewardAmount: safeParseInt($("#rewardAmount").val()),
                     registrationLink: emptyToNull(registrationLink),
                     location: locationValue === "Select location" ? null : locationValue,
                     timeStart: emptyToNull($("#timeStart").val()),

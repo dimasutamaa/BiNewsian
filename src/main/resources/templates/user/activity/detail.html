@@ -75,19 +75,11 @@
                         </div>
                     </div>
 
-                    <div class="info-row" th:if="${activity.type.name() == 'STUDENT_ACTIVITY_TRANSCRIPT'}">
-                        <i class="bi bi-star info-icon"></i>
+                    <div class="info-row">
+                        <i class="bi bi-tag info-icon"></i>
                         <div class="info-content">
-                            <div class="info-label">SAT Points</div>
-                            <div class="info-value" style="color: #f59e0b;" th:text="${activity.rewardAmount} + ' Points'">-</div>
-                        </div>
-                    </div>
-
-                    <div class="info-row" th:if="${activity.type.name() == 'COMMUNITY_SERVICE'}">
-                        <i class="bi bi-clock info-icon"></i>
-                        <div class="info-content">
-                            <div class="info-label">Community Service</div>
-                            <div class="info-value" style="color: #3b82f6;" th:text="${activity.rewardAmount} + ' Hours'">-</div>
+                            <div class="info-label">Activity Type</div>
+                            <div class="info-value" th:text="${activity.type.displayName}">-</div>
                         </div>
                     </div>
 

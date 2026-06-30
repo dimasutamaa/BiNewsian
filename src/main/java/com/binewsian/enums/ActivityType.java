@@ -6,7 +6,10 @@ import lombok.Getter;
 @Getter
 @AllArgsConstructor
 public enum ActivityType {
-    STUDENT_ACTIVITY_TRANSCRIPT("Student Activity Transcript"),
+    WEBINAR("Webinar"),
+    SEMINAR("Seminar"),
+    WORKSHOP("Workshop"),
+    CERTIFICATION("Certification"),
     COMMUNITY_SERVICE("Community Service");
 
     private final String displayName;

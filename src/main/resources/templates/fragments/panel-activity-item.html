@@ -5,21 +5,10 @@
 
             <small class="text-muted d-flex align-items-center gap-1">
                 <!-- Icon -->
-                <i th:if="${activity.type != null and activity.type.displayName == 'Student Activity Transcript'}"
-                   class="bi bi-star-fill me-1" style="color: #f59e0b;"></i>
-                <i th:if="${activity.type != null and activity.type.displayName == 'Community Service'}"
-                   class="bi bi-clock me-1" style="color: #3b82f6;"></i>
+                <i th:if="${activity.type != null}" class="bi bi-dot"></i>
 
                 <!-- Text -->
                 <span th:text="${activity.type != null ? activity.type.displayName : '-'}">-</span>
-
-                <!-- Reward -->
-                <span th:if="${activity.rewardAmount != null and activity.type.displayName == 'Student Activity Transcript'}"
-                      th:text="|• ${activity.rewardAmount} Points|">
-                </span>
-                <span th:if="${activity.rewardAmount != null and activity.type.displayName == 'Community Service'}"
-                      th:text="|• ${activity.rewardAmount} Hours|">
-                </span>
             </small>
         </div>
 

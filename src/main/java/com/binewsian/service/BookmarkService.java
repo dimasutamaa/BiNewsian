@@ -15,4 +15,5 @@ public interface BookmarkService {
     List<ForumThread> getBookmarkedThreads(User user);
     List<Long> getContentIds(User user, String type);
     int countByUserAndType(User user, String type);
+    void deleteIfExists(Long contentId);
 }

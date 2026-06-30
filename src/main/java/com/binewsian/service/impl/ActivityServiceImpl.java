@@ -10,8 +10,10 @@ import com.binewsian.exception.BiNewsianException;
 import com.binewsian.model.Activity;
 import com.binewsian.model.User;
 import com.binewsian.repository.ActivityRepository;
+import com.binewsian.repository.CommentRepository;
 import com.binewsian.repository.UserRepository;
 import com.binewsian.service.ActivityService;
+import com.binewsian.service.BookmarkService;
 import com.binewsian.service.EmailService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -39,6 +41,8 @@ public class ActivityServiceImpl implements ActivityService {
     private final ActivityRepository activityRepository;
     private final UserRepository userRepository;
     private final EmailService emailService;
+    private final BookmarkService bookmarkService;
+    private final CommentRepository commentRepository;
 
     @Override
     public void create(ActivityRequest request, User user, String appUrl) throws BiNewsianException {
@@ -54,7 +58,6 @@ public class ActivityServiceImpl implements ActivityService {
         activity.setTitle(request.title());
         activity.setType(request.activityType());
         activity.setQuota(request.quota());
-        activity.setRewardAmount(request.rewardAmount());
         activity.setRegistrationLink(request.registrationLink());
         activity.setLocation(request.location());
         activity.setTimeStart(request.timeStart());
@@ -93,7 +96,6 @@ public class ActivityServiceImpl implements ActivityService {
         activity.setTitle(request.title());
         activity.setType(request.activityType());
         activity.setQuota(request.quota());
-        activity.setRewardAmount(request.rewardAmount());
         activity.setRegistrationLink(request.registrationLink());
         activity.setLocation(request.location());
         activity.setTimeStart(request.timeStart());
@@ -116,6 +118,8 @@ public class ActivityServiceImpl implements ActivityService {
         Activity activity = activityRepository.findById(id)
                 .orElseThrow(() -> new BiNewsianException(AppConstant.ACTIVITY_NOT_FOUND));
 
+        bookmarkService.deleteIfExists(activity.getId());
+        commentRepository.deleteByContentIdAndContentType(activity.getId(), "ACTIVITY");
         activityRepository.delete(activity);
     }
 
@@ -178,7 +182,7 @@ public class ActivityServiceImpl implements ActivityService {
         }
 
         boolean hasTypeFilter = filterDto.getType() != null && !filterDto.getType().isEmpty();
-        List<ActivityType> types = hasTypeFilter ? filterDto.getType() : List.of(ActivityType.STUDENT_ACTIVITY_TRANSCRIPT);
+        List<ActivityType> types = hasTypeFilter ? filterDto.getType() : List.of(ActivityType.WEBINAR);
 
         String searchTerm = null;
         if (filterDto.getSearch() != null && !filterDto.getSearch().trim().isEmpty()) {
@@ -222,8 +226,6 @@ public class ActivityServiceImpl implements ActivityService {
             return Sort.by(Sort.Direction.DESC, "activityDate");
         } else if (sortBy.equals("oldest")) {
             return Sort.by(Sort.Direction.ASC, "activityDate");
-        } else if (sortBy.equals("reward")) {
-            return Sort.by(Sort.Direction.DESC, "rewardAmount");
         }
         return Sort.by(Sort.Direction.DESC, "activityDate");
     }
@@ -314,11 +316,11 @@ public class ActivityServiceImpl implements ActivityService {
             throw new BiNewsianException("Quota must be greater than 0");
         }
 
-        Integer rewardAmount = r.rewardAmount();
-
-        if (rewardAmount == null || rewardAmount <= 0) {
-            throw new BiNewsianException("Reward amount must be greater than 0");
-        }
+//        Integer rewardAmount = r.rewardAmount();
+//
+//        if (rewardAmount == null || rewardAmount <= 0) {
+//            throw new BiNewsianException("Reward amount must be greater than 0");
+//        }
 
         validatePublishDateTime(r);
 

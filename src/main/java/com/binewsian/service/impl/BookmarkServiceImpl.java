@@ -71,6 +71,11 @@ public class BookmarkServiceImpl implements BookmarkService {
     }
 
     @Override
+    public void deleteIfExists(Long contentId) {
+        bookmarkRepository.findByContentId(contentId).ifPresent(bookmarkRepository::delete);
+    }
+
+    @Override
     public List<Long> getContentIds(User user, String type) {
         return bookmarkRepository
                 .findByUserAndContentTypeOrderByCreatedAtDesc(user, type)

@@ -12,7 +12,6 @@ public record ActivityRequest(
         String title,
         ActivityType activityType,
         Integer quota,
-        Integer rewardAmount,
         String registrationLink,
         String location,
 
